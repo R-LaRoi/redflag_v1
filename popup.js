@@ -177,18 +177,15 @@ async function loadRecentReports() {
 // Handle enable/disable toggle
 async function handleEnableToggle() {
   const enabled = elements.enableToggle.checked;
-
   try {
-    // Save setting
-    await saveSettings({ extensionEnabled: enabled });
-
-    // Notify content script
-    await sendMessageToTab({
+    console.log("Toggling extension, new state:", enabled);
+    saveSettings({ extensionEnabled: enabled });
+    console.log("Settings saved, now notifying content script...");
+    sendMessageToTab({
       type: "TOGGLE_EXTENSION",
       enabled: enabled,
     });
-
-    // Update UI
+    console.log("Content script notified!");
     if (enabled) {
       showStatus("RedFlag enabled", "success");
       if (currentJobData) {
@@ -199,7 +196,10 @@ async function handleEnableToggle() {
       disableJobActions();
     }
   } catch (error) {
-    console.error("RedFlag: Error toggling extension:", error);
+    const message =
+      error && error.message ? error.message : JSON.stringify(error);
+    console.error("RedFlag: Error toggling extension:", message, error);
+    showError("Could not toggle extension. Are you on a supported job page?");
     elements.enableToggle.checked = !enabled; // Revert on error
   }
 }
