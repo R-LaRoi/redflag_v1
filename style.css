@@ -2,12 +2,12 @@
 
 /* CSS Custom Properties */
 :root {
-  --primary-color: 0 85% 58%;
+  --primary-color: #ff1034;
   --primary-hover: 0 85% 53%;
   --success-color: 120 60% 50%;
   --warning-color: 0 85% 58%;
-  --error-color: 0 85% 51%;
-  --info-color: 213 78% 43%;
+  --error-color: #ff1034;
+  --info-color: white;
 
   --background: #1a1b4d;
   --surface: rgba(255, 255, 255, 0.95);
@@ -15,7 +15,7 @@
   --header-bg: #1a1b4d;
   --section-bg: rgba(43, 76, 140, 0.1);
 
-  --text-primary: #ffff;
+  --text-primary: black;
   --text-secondary: #2b4c8c;
   --text-muted: #8a9ba8;
   --text-on-dark: #ffffff;
