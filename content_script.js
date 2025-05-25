@@ -41,6 +41,7 @@ const JOBSCAN_CONFIG = {
 let isAnalyzing = false;
 let currentJobData = null;
 let extensionEnabled = true;
+let currentAnalysisResult = null;
 let currentSite = null;
 
 // Detect which job site we're on
@@ -50,8 +51,16 @@ function detectCurrentSite() {
     return "linkedin";
   } else if (hostname.includes("indeed.com")) {
     return "indeed";
+  } else if (hostname.includes("monster.com")) {
+    return "monster";
+  } else if (hostname.includes("builtin.com")) {
+    return "builtin";
+  } else if (hostname.includes("glassdoor.com")) {
+    return "glassdoor";
+  } else if (hostname.includes("ziprecruiter.com")) {
+    return "ziprecruiter";
   }
-  return null;
+  return null; // Site not supported
 }
 
 // Initialize extension
@@ -70,7 +79,7 @@ async function init() {
 
     // Get extension settings
     const response = await sendMessageToBackground({ type: "GET_SETTINGS" });
-    if (response.success) {
+    if (response.success && response.settings) {
       extensionEnabled = response.settings.extensionEnabled;
     }
 
@@ -152,71 +161,8 @@ async function analyzeCurrentJob() {
 }
 
 // Extract job data from current site DOM
-function extractJobData() {
-  if (!currentSite) return null;
-
-  const data = {
-    jobTitle: null,
-    company: null,
-    description: null,
-    salary: null,
-    location: null,
-    url: window.location.href,
-    site: currentSite,
-  };
-
-  const selectors = JOBSCAN_CONFIG.selectors[currentSite];
-
-  // Extract job title
-  const titleElement = document.querySelector(selectors.jobTitle);
-  if (titleElement) {
-    data.jobTitle = titleElement.textContent.trim();
-  }
-
-  // Extract company name
-  const companyElement = document.querySelector(selectors.company);
-  if (companyElement) {
-    data.company = companyElement.textContent.trim();
-  }
-
-  // Extract job description
-  const descriptionElement = document.querySelector(selectors.description);
-  if (descriptionElement) {
-    data.description = descriptionElement.textContent.trim();
-  }
-
-  // Extract salary information
-  const salaryElements = document.querySelectorAll(selectors.salary);
-  salaryElements.forEach((element) => {
-    const text = element.textContent.trim().toLowerCase();
-    if (
-      text.includes("$") ||
-      text.includes("salary") ||
-      text.includes("pay") ||
-      text.includes("hour") ||
-      text.includes("year")
-    ) {
-      data.salary = element.textContent.trim();
-    }
-  });
-
-  // Extract location
-  const locationElements = document.querySelectorAll(selectors.location);
-  locationElements.forEach((element) => {
-    const text = element.textContent.trim();
-    if (currentSite === "linkedin") {
-      if (text && !text.includes("•") && !text.includes("Reposted")) {
-        data.location = text;
-      }
-    } else if (currentSite === "indeed") {
-      if (text && !text.includes("reviews")) {
-        data.location = text;
-      }
-    }
-  });
-
-  console.log("RedFlag: Extracted job data:", data);
-  return data;
+if (response.success && response.settings) {
+  extensionEnabled = response.settings.extensionEnabled;
 }
 
 // Perform heuristic analysis for scam detection
