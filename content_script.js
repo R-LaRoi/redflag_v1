@@ -385,7 +385,7 @@ function injectStatusElement(message, status = "info") {
   statusElement.className = `jobscan-status jobscan-status-${status}`;
   statusElement.innerHTML = `
     <div class="jobscan-status-content">
-      <span class="jobscan-icon">🔍</span>
+      <span class="jobscan-icon">🚩</span>
       <span class="jobscan-message">${message}</span>
     </div>
   `;

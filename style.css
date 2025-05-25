@@ -1,33 +1,26 @@
 /* JobScan Extension Styles */
 
-/* CSS Custom Properties */
 :root {
-  --primary-color: 210 100% 50%; /* #0066CC */
-  --primary-hover: 210 100% 45%; /* #0052A3 */
-  --success-color: 120 60% 50%; /* #4CAF50 */
-  --warning-color: 45 100% 50%; /* #FF9800 */
-  --error-color: 0 65% 51%; /* #DC3545 */
-  --info-color: 200 60% 50%; /* #17A2B8 */
-  
-  --background: 210 11% 98%; /* #F5F7FA */
-  --surface: 0 0% 100%; /* #FFFFFF */
-  --surface-hover: 210 11% 96%; /* #F0F2F5 */
-  
-  --text-primary: 210 22% 22%; /* #2C3E50 */
-  --text-secondary: 210 11% 54%; /* #7F8C8D */
-  --text-muted: 210 11% 71%; /* #BDC3C7 */
-  
-  --border: 210 11% 91%; /* #E5E8EB */
-  --border-hover: 210 11% 85%; /* #D1D7DB */
-  
+  --primary-color: 9 78% 59%;
+  --primary-hover: 9 78% 54%;
+  --success-color: 120 60% 50%;
+  --warning-color: 9 78% 59%;
+  --error-color: 0 85% 51%;
+  --info-color: 200 60% 50%;
+  --background: 210 11% 98%;
+  --surface: 0 0% 100%;
+  --surface-hover: 210 11% 96%;
+  --text-primary: 210 22% 22%;
+  --text-secondary: 210 11% 54%;
+  --text-muted: 210 11% 71%;
+  --border: 210 11% 91%;
+  --border-hover: 210 11% 85%;
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.15);
-  
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 12px;
-  
   --transition: all 0.2s ease;
 }
 
@@ -39,7 +32,8 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, sans-serif;
   font-size: 14px;
   line-height: 1.5;
   color: hsl(var(--text-primary));
@@ -556,7 +550,7 @@ textarea.form-control {
   border-radius: var(--radius-md);
   border: 1px solid hsl(var(--border));
   background: hsl(var(--surface));
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 14px;
   line-height: 1.4;
   box-shadow: var(--shadow-sm);
@@ -631,7 +625,7 @@ textarea.form-control {
   .popup-container {
     min-height: auto;
   }
-  
+
   .reports-list {
     max-height: 100px;
   }
@@ -639,7 +633,8 @@ textarea.form-control {
 
 /* Animation for loading states */
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
