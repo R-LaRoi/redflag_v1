@@ -49,8 +49,8 @@ Ready to empower your job search? Follow these simple steps to install RedFlag o
 4.  Click **"Load unpacked"** and select the entire `redflag_v1` (or whatever you named the root) folder.
 5.  You should now see RedFlag in your Edge extensions toolbar.
 
-##  Project Structure
-
+## 📁 Project Structure
+```
 .
 ├── LICENSE
 ├── README.md
@@ -63,3 +63,5 @@ Ready to empower your job search? Follow these simple steps to install RedFlag o
 ├── manifest.json
 ├── popup.html
 └── popup.js
+
+
