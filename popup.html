@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RedFlag - Scam Job Detector</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="popup-container">
+      <!-- Header -->
+      <header class="popup-header">
+        <div class="header-content">
+          <div class="logo">
+            <span class="logo-icon">🔍</span>
+            <span class="logo-text">RedFlag</span>
+          </div>
+          <div class="version">v1.0.0</div>
+        </div>
+      </header>
+
+      <!-- Status Section -->
+      <section class="status-section">
+        <div class="status-card" id="status-card">
+          <div class="status-content">
+            <span class="status-icon" id="status-icon">⏳</span>
+            <div class="status-text">
+              <div class="status-title" id="status-title">Initializing...</div>
+              <div class="status-subtitle" id="status-subtitle">
+                Please wait
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Controls Section -->
+      <section class="controls-section">
+        <!-- Enable/Disable Toggle -->
+        <div class="control-group">
+          <label class="toggle-container">
+            <span class="toggle-label">Enable RedFlag</span>
+            <div class="toggle-switch">
+              <input type="checkbox" id="enable-toggle" checked />
+              <span class="toggle-slider"></span>
+            </div>
+          </label>
+        </div>
+
+        <!-- Analysis Mode -->
+        <div class="control-group">
+          <label for="analysis-mode" class="control-label">Analysis Mode</label>
+          <select id="analysis-mode" class="control-select">
+            <option value="conservative">Conservative</option>
+            <option value="balanced">Balanced</option>
+            <option value="aggressive">Aggressive</option>
+          </select>
+        </div>
+
+        <!-- Show Warnings Toggle -->
+        <div class="control-group">
+          <label class="toggle-container">
+            <span class="toggle-label">Show Warnings</span>
+            <div class="toggle-switch">
+              <input type="checkbox" id="warnings-toggle" checked />
+              <span class="toggle-slider"></span>
+            </div>
+          </label>
+        </div>
+      </section>
+
+      <!-- Actions Section -->
+      <section class="actions-section">
+        <!-- Report Job Button -->
+        <button id="report-job-btn" class="action-button primary" disabled>
+          <span class="button-icon">📝</span>
+          <span class="button-text">Report This Job</span>
+        </button>
+
+        <!-- Reanalyze Button -->
+        <button id="reanalyze-btn" class="action-button secondary">
+          <span class="button-icon">🔄</span>
+          <span class="button-text">Reanalyze</span>
+        </button>
+      </section>
+
+      <!-- Current Job Info -->
+      <section
+        class="job-info-section"
+        id="job-info-section"
+        style="display: none">
+        <div class="section-header">
+          <h3>Current Job</h3>
+        </div>
+        <div class="job-details">
+          <div class="job-title" id="current-job-title">-</div>
+          <div class="job-company" id="current-job-company">-</div>
+          <div class="job-url" id="current-job-url">-</div>
+        </div>
+      </section>
+
+      <!-- Recent Reports -->
+      <section
+        class="reports-section"
+        id="reports-section"
+        style="display: none">
+        <div class="section-header">
+          <h3>Recent Reports</h3>
+          <span class="report-count" id="report-count">0</span>
+        </div>
+        <div class="reports-list" id="reports-list">
+          <!-- Reports will be populated here -->
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer class="popup-footer">
+        <div class="footer-links">
+          <a href="#" id="help-link" class="footer-link">Help</a>
+          <a href="#" id="privacy-link" class="footer-link">Privacy</a>
+          <a href="#" id="feedback-link" class="footer-link">Feedback</a>
+        </div>
+      </footer>
+    </div>
+
+    <!-- Report Modal -->
+    <div id="report-modal" class="modal" style="display: none">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Report Job Listing</h2>
+          <button class="modal-close" id="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <form id="report-form">
+            <div class="form-group">
+              <label for="report-type">Report Type</label>
+              <select id="report-type" class="form-control" required>
+                <option value="">Select reason...</option>
+                <option value="scam">Suspected Scam</option>
+                <option value="fake">Fake Job Listing</option>
+                <option value="misleading">Misleading Information</option>
+                <option value="inappropriate">Inappropriate Content</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="report-comment">Additional Details (Optional)</label>
+              <textarea
+                id="report-comment"
+                class="form-control"
+                rows="3"
+                placeholder="Provide additional context about why you're reporting this job..."></textarea>
+            </div>
+            <div class="form-actions">
+              <button
+                type="button"
+                id="cancel-report"
+                class="action-button secondary">
+                Cancel
+              </button>
+              <button type="submit" class="action-button primary">
+                Submit Report
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

@@ -1,0 +1,662 @@
+/* JobScan Extension Styles */
+
+/* CSS Custom Properties */
+:root {
+  --primary-color: 210 100% 50%; /* #0066CC */
+  --primary-hover: 210 100% 45%; /* #0052A3 */
+  --success-color: 120 60% 50%; /* #4CAF50 */
+  --warning-color: 45 100% 50%; /* #FF9800 */
+  --error-color: 0 65% 51%; /* #DC3545 */
+  --info-color: 200 60% 50%; /* #17A2B8 */
+  
+  --background: 210 11% 98%; /* #F5F7FA */
+  --surface: 0 0% 100%; /* #FFFFFF */
+  --surface-hover: 210 11% 96%; /* #F0F2F5 */
+  
+  --text-primary: 210 22% 22%; /* #2C3E50 */
+  --text-secondary: 210 11% 54%; /* #7F8C8D */
+  --text-muted: 210 11% 71%; /* #BDC3C7 */
+  
+  --border: 210 11% 91%; /* #E5E8EB */
+  --border-hover: 210 11% 85%; /* #D1D7DB */
+  
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.15);
+  
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  
+  --transition: all 0.2s ease;
+}
+
+/* Reset and Base Styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: hsl(var(--text-primary));
+  background: hsl(var(--background));
+  width: 380px;
+  min-height: 500px;
+  overflow-x: hidden;
+}
+
+/* Popup Container */
+.popup-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 500px;
+}
+
+/* Header */
+.popup-header {
+  background: hsl(var(--surface));
+  border-bottom: 1px solid hsl(var(--border));
+  padding: 16px 20px;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 16px;
+  color: hsl(var(--text-primary));
+}
+
+.logo-icon {
+  font-size: 20px;
+}
+
+.version {
+  font-size: 11px;
+  color: hsl(var(--text-muted));
+  background: hsl(var(--background));
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+}
+
+/* Status Section */
+.status-section {
+  padding: 16px 20px;
+}
+
+.status-card {
+  background: hsl(var(--surface));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-md);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+
+.status-card.status-success {
+  border-color: hsl(var(--success-color));
+  background: hsl(var(--success-color) / 0.05);
+}
+
+.status-card.status-warning {
+  border-color: hsl(var(--warning-color));
+  background: hsl(var(--warning-color) / 0.05);
+}
+
+.status-card.status-error {
+  border-color: hsl(var(--error-color));
+  background: hsl(var(--error-color) / 0.05);
+}
+
+.status-card.status-loading {
+  border-color: hsl(var(--info-color));
+  background: hsl(var(--info-color) / 0.05);
+}
+
+.status-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.status-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.status-text {
+  flex: 1;
+}
+
+.status-title {
+  font-weight: 500;
+  color: hsl(var(--text-primary));
+  margin-bottom: 2px;
+}
+
+.status-subtitle {
+  font-size: 12px;
+  color: hsl(var(--text-secondary));
+}
+
+/* Controls Section */
+.controls-section {
+  padding: 0 20px 16px;
+}
+
+.control-group {
+  margin-bottom: 16px;
+}
+
+.control-label {
+  display: block;
+  font-weight: 500;
+  color: hsl(var(--text-primary));
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.control-select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-sm);
+  background: hsl(var(--surface));
+  color: hsl(var(--text-primary));
+  font-size: 13px;
+  transition: var(--transition);
+}
+
+.control-select:hover {
+  border-color: hsl(var(--border-hover));
+}
+
+.control-select:focus {
+  outline: none;
+  border-color: hsl(var(--primary-color));
+  box-shadow: 0 0 0 2px hsl(var(--primary-color) / 0.2);
+}
+
+/* Toggle Switch */
+.toggle-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle-label {
+  font-weight: 500;
+  color: hsl(var(--text-primary));
+  font-size: 13px;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: hsl(var(--text-muted));
+  border-radius: 24px;
+  transition: var(--transition);
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background: hsl(var(--surface));
+  border-radius: 50%;
+  transition: var(--transition);
+}
+
+input:checked + .toggle-slider {
+  background: hsl(var(--primary-color));
+}
+
+input:checked + .toggle-slider:before {
+  transform: translateX(20px);
+}
+
+/* Actions Section */
+.actions-section {
+  padding: 0 20px 16px;
+}
+
+.action-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  margin-bottom: 8px;
+}
+
+.action-button:last-child {
+  margin-bottom: 0;
+}
+
+.action-button.primary {
+  background: hsl(var(--primary-color));
+  color: white;
+}
+
+.action-button.primary:hover:not(:disabled) {
+  background: hsl(var(--primary-hover));
+}
+
+.action-button.secondary {
+  background: hsl(var(--surface));
+  color: hsl(var(--text-primary));
+  border: 1px solid hsl(var(--border));
+}
+
+.action-button.secondary:hover:not(:disabled) {
+  background: hsl(var(--surface-hover));
+  border-color: hsl(var(--border-hover));
+}
+
+.action-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.button-icon {
+  font-size: 16px;
+}
+
+.button-text {
+  font-size: 14px;
+}
+
+/* Job Info Section */
+.job-info-section {
+  padding: 0 20px 16px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.section-header h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: hsl(var(--text-primary));
+}
+
+.job-details {
+  background: hsl(var(--surface));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-md);
+  padding: 12px;
+}
+
+.job-title {
+  font-weight: 500;
+  color: hsl(var(--text-primary));
+  margin-bottom: 4px;
+  word-break: break-word;
+}
+
+.job-company {
+  color: hsl(var(--text-secondary));
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.job-url {
+  font-size: 11px;
+  color: hsl(var(--text-muted));
+  word-break: break-all;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Reports Section */
+.reports-section {
+  padding: 0 20px 16px;
+  flex: 1;
+}
+
+.report-count {
+  background: hsl(var(--primary-color));
+  color: white;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+.reports-list {
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.report-item {
+  background: hsl(var(--surface));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-md);
+  padding: 10px;
+  margin-bottom: 8px;
+}
+
+.report-item:last-child {
+  margin-bottom: 0;
+}
+
+.report-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: hsl(var(--text-primary));
+  margin-bottom: 4px;
+  word-break: break-word;
+}
+
+.report-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+}
+
+.report-type {
+  background: hsl(var(--info-color) / 0.1);
+  color: hsl(var(--info-color));
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+}
+
+.report-date {
+  color: hsl(var(--text-muted));
+}
+
+/* Footer */
+.popup-footer {
+  background: hsl(var(--surface));
+  border-top: 1px solid hsl(var(--border));
+  padding: 12px 20px;
+  margin-top: auto;
+}
+
+.footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.footer-link {
+  color: hsl(var(--text-secondary));
+  text-decoration: none;
+  font-size: 12px;
+  transition: var(--transition);
+}
+
+.footer-link:hover {
+  color: hsl(var(--primary-color));
+}
+
+/* Modal */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: hsl(var(--surface));
+  border-radius: var(--radius-lg);
+  width: 320px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.modal-header h2 {
+  font-size: 16px;
+  font-weight: 600;
+  color: hsl(var(--text-primary));
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: hsl(var(--text-secondary));
+  cursor: pointer;
+  transition: var(--transition);
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close:hover {
+  color: hsl(var(--text-primary));
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+/* Form Styles */
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 500;
+  color: hsl(var(--text-primary));
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.form-control {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-sm);
+  background: hsl(var(--surface));
+  color: hsl(var(--text-primary));
+  font-size: 13px;
+  transition: var(--transition);
+  font-family: inherit;
+}
+
+.form-control:hover {
+  border-color: hsl(var(--border-hover));
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: hsl(var(--primary-color));
+  box-shadow: 0 0 0 2px hsl(var(--primary-color) / 0.2);
+}
+
+textarea.form-control {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.form-actions .action-button {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+/* Content Script Injected Styles */
+.jobscan-status {
+  position: relative;
+  margin: 12px 0;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--surface));
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+  box-shadow: var(--shadow-sm);
+  z-index: 1000;
+}
+
+.jobscan-status-analyzing {
+  border-color: hsl(var(--info-color));
+  background: hsl(var(--info-color) / 0.05);
+}
+
+.jobscan-status-success {
+  border-color: hsl(var(--success-color));
+  background: hsl(var(--success-color) / 0.05);
+}
+
+.jobscan-status-warning {
+  border-color: hsl(var(--warning-color));
+  background: hsl(var(--warning-color) / 0.05);
+}
+
+.jobscan-status-caution {
+  border-color: hsl(var(--warning-color));
+  background: hsl(var(--warning-color) / 0.08);
+}
+
+.jobscan-status-error {
+  border-color: hsl(var(--error-color));
+  background: hsl(var(--error-color) / 0.05);
+}
+
+.jobscan-status-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.jobscan-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.jobscan-message {
+  flex: 1;
+  color: hsl(var(--text-primary));
+  font-weight: 500;
+  white-space: pre-line;
+}
+
+/* Scrollbar Styling */
+.reports-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.reports-list::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+  border-radius: 3px;
+}
+
+.reports-list::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 3px;
+}
+
+.reports-list::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--border-hover));
+}
+
+/* Responsive Adjustments */
+@media (max-height: 600px) {
+  .popup-container {
+    min-height: auto;
+  }
+  
+  .reports-list {
+    max-height: 100px;
+  }
+}
+
+/* Animation for loading states */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.status-card.status-loading .status-icon {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Focus styles for accessibility */
+.action-button:focus {
+  outline: 2px solid hsl(var(--primary-color));
+  outline-offset: 2px;
+}
+
+.toggle-container:focus-within .toggle-slider {
+  box-shadow: 0 0 0 2px hsl(var(--primary-color) / 0.2);
+}
