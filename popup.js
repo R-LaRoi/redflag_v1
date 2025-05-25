@@ -61,9 +61,12 @@ async function initializePopup() {
     return;
   }
 
-  // Check if we're on LinkedIn
-  if (!currentTab.url.includes("linkedin.com")) {
-    showStatus("Navigate to LinkedIn to use RedFlag", "info");
+  // Check if we're on a supported job site
+  const isLinkedIn = currentTab.url.includes("linkedin.com");
+  const isIndeed = currentTab.url.includes("indeed.com");
+
+  if (!isLinkedIn && !isIndeed) {
+    showStatus("Navigate to LinkedIn or Indeed to use RedFlag", "info");
     disableJobActions();
     return;
   }
@@ -72,10 +75,15 @@ async function initializePopup() {
   await loadSettings();
 
   // Get current job data if on job page
-  if (currentTab.url.includes("/jobs/")) {
+  const isJobPage =
+    (isLinkedIn && currentTab.url.includes("/jobs/")) ||
+    (isIndeed && currentTab.url.includes("/viewjob"));
+
+  if (isJobPage) {
     await loadCurrentJobData();
   } else {
-    showStatus("Navigate to a LinkedIn job listing", "info");
+    const siteName = isLinkedIn ? "LinkedIn" : "Indeed";
+    showStatus(`Navigate to a ${siteName} job listing`, "info");
     disableJobActions();
   }
 
