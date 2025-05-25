@@ -178,14 +178,11 @@ async function loadRecentReports() {
 async function handleEnableToggle() {
   const enabled = elements.enableToggle.checked;
   try {
-    console.log("Toggling extension, new state:", enabled);
-    saveSettings({ extensionEnabled: enabled });
-    console.log("Settings saved, now notifying content script...");
-    sendMessageToTab({
+    await saveSettings({ extensionEnabled: enabled });
+    await sendMessageToTab({
       type: "TOGGLE_EXTENSION",
       enabled: enabled,
     });
-    console.log("Content script notified!");
     if (enabled) {
       showStatus("RedFlag enabled", "success");
       if (currentJobData) {

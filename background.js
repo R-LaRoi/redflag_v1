@@ -1,45 +1,39 @@
 // RedFlag Background Script
-// Handles message passing and data coordination between content script and popup
+// Manages message routing, storage, and extension state
 
 console.log("RedFlag: Background script loaded");
 
-// Listen for messages from content script and popup
+// Main message handler for content script and popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log("RedFlag: Background received message:", message);
 
   switch (message.type) {
     case "ANALYSIS_RESULT":
-      handleAnalysisResult(message.data, sender);
+      storeAnalysisResult(message.data, sender);
       break;
-
     case "USER_REPORT":
-      handleUserReport(message.data, sender);
+      storeUserReport(message.data);
       break;
-
     case "GET_SETTINGS":
-      getSettings(sendResponse);
-      return true; // Will respond asynchronously
-
+      fetchSettings(sendResponse);
+      return true; // Async response
     case "SAVE_SETTINGS":
-      saveSettings(message.data, sendResponse);
-      return true; // Will respond asynchronously
-
+      persistSettings(message.data, sendResponse);
+      return true; // Async response
     case "GET_REPORTS":
-      getStoredReports(sendResponse);
-      return true; // Will respond asynchronously
-
+      fetchReports(sendResponse);
+      return true; // Async response
     default:
       console.warn("RedFlag: Unknown message type:", message.type);
   }
 });
 
-// Handle analysis results from content script
-function handleAnalysisResult(data, sender) {
+// Store analysis results from content script
+function storeAnalysisResult(data, sender) {
   console.log("RedFlag: Analysis result received:", data);
 
-  // Store analysis result for potential reporting
-  const analysisData = {
-    tabId: sender.tab.id,
+  const analysis = {
+    tabId: sender.tab?.id,
     url: data.url,
     jobTitle: data.jobTitle,
     company: data.company,
@@ -47,25 +41,19 @@ function handleAnalysisResult(data, sender) {
     timestamp: Date.now(),
   };
 
-  // Store in local storage
   chrome.storage.local.get(["recentAnalyses"], (result) => {
     const analyses = result.recentAnalyses || [];
-    analyses.unshift(analysisData);
-
-    // Keep only last 50 analyses to prevent storage bloat
-    if (analyses.length > 50) {
-      analyses.splice(50);
-    }
-
+    analyses.unshift(analysis);
+    if (analyses.length > 50) analyses.length = 50;
     chrome.storage.local.set({ recentAnalyses: analyses });
   });
 }
 
-// Handle user reports from popup
-function handleUserReport(data, sender) {
+// Store user reports from popup
+function storeUserReport(data) {
   console.log("RedFlag: User report received:", data);
 
-  const reportData = {
+  const report = {
     id: generateReportId(),
     url: data.url,
     jobTitle: data.jobTitle,
@@ -73,39 +61,37 @@ function handleUserReport(data, sender) {
     reportType: data.reportType,
     userComment: data.userComment,
     timestamp: Date.now(),
-    synced: false, // Flag for future backend sync
+    synced: false,
   };
 
-  // Store report locally
   chrome.storage.local.get(["userReports"], (result) => {
     const reports = result.userReports || [];
-    reports.unshift(reportData);
-
+    reports.unshift(report);
     chrome.storage.local.set({ userReports: reports }, () => {
       console.log("RedFlag: Report saved locally");
-      // TODO: In future phases, sync with backend API
     });
   });
 }
 
-// Get user settings from storage
-function getSettings(sendResponse) {
+// Retrieve extension settings
+function fetchSettings(sendResponse) {
   chrome.storage.local.get(
     ["extensionEnabled", "showWarnings", "analysisMode"],
     (result) => {
-      const settings = {
-        extensionEnabled: result.extensionEnabled !== false, // Default to true
-        showWarnings: result.showWarnings !== false, // Default to true
-        analysisMode: result.analysisMode || "conservative", // Default to conservative
-      };
-
-      sendResponse({ success: true, settings });
+      sendResponse({
+        success: true,
+        settings: {
+          extensionEnabled: result.extensionEnabled !== false,
+          showWarnings: result.showWarnings !== false,
+          analysisMode: result.analysisMode || "conservative",
+        },
+      });
     }
   );
 }
 
-// Save user settings to storage
-function saveSettings(settings, sendResponse) {
+// Save extension settings
+function persistSettings(settings, sendResponse) {
   chrome.storage.local.set(settings, () => {
     if (chrome.runtime.lastError) {
       console.error(
@@ -120,25 +106,23 @@ function saveSettings(settings, sendResponse) {
   });
 }
 
-// Get stored reports for popup display
-function getStoredReports(sendResponse) {
+// Retrieve recent user reports (up to 10)
+function fetchReports(sendResponse) {
   chrome.storage.local.get(["userReports"], (result) => {
     const reports = result.userReports || [];
-    sendResponse({ success: true, reports: reports.slice(0, 10) }); // Return last 10 reports
+    sendResponse({ success: true, reports: reports.slice(0, 10) });
   });
 }
 
-// Generate unique report ID
+// Utility: Generate a unique report ID
 function generateReportId() {
-  return "report_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
+  return `report_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
 }
 
-// Handle extension installation/update
+// On install/update: set default settings
 chrome.runtime.onInstalled.addListener((details) => {
   console.log("RedFlag: Extension installed/updated:", details);
-
   if (details.reason === "install") {
-    // Set default settings on first install
     chrome.storage.local.set({
       extensionEnabled: true,
       showWarnings: true,
@@ -147,7 +131,7 @@ chrome.runtime.onInstalled.addListener((details) => {
   }
 });
 
-// Handle storage changes (for debugging)
+// Log storage changes (for debugging)
 chrome.storage.onChanged.addListener((changes, namespace) => {
   console.log("RedFlag: Storage changed:", changes, "in", namespace);
 });

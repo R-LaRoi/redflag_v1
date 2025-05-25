@@ -1,12 +1,10 @@
 // RedFlag Content Script
-// Runs on LinkedIn job pages to analyze listings for potential scams
+// Runs on LinkedIn, Indeed, and other job boards to analyze listings for potential scams
 
 console.log("RedFlag: Content script loaded on", window.location.href);
 
-// Configuration
 const JOBSCAN_CONFIG = {
   selectors: {
-    // LinkedIn selectors
     linkedin: {
       jobTitle:
         ".job-details-jobs-unified-top-card__job-title a, .job-details-jobs-unified-top-card__job-title h1, .jobs-unified-top-card__job-title a",
@@ -19,7 +17,6 @@ const JOBSCAN_CONFIG = {
       location:
         ".job-details-jobs-unified-top-card__bullet, .jobs-unified-top-card__bullet",
     },
-    // Indeed selectors
     indeed: {
       jobTitle:
         '[data-testid="jobsearch-JobInfoHeader-title"], h1[data-testid="jobsearch-JobInfoHeader-title"]',
@@ -37,35 +34,55 @@ const JOBSCAN_CONFIG = {
   debounceDelay: 1000,
 };
 
-// Global state
 let isAnalyzing = false;
 let currentJobData = null;
 let extensionEnabled = true;
 let currentAnalysisResult = null;
 let currentSite = null;
 
-// Detect which job site we're on
 function detectCurrentSite() {
   const hostname = window.location.hostname;
-  if (hostname.includes("linkedin.com")) {
-    return "linkedin";
-  } else if (hostname.match(/indeed\./i)) {
-    // matches indeed.com, indeed.co.uk, www.indeed.com, etc.
-    return "indeed";
-  } else if (hostname.includes("monster.com")) {
-    return "monster";
-  } else if (hostname.includes("builtin.com")) {
-    return "builtin";
-  } else if (hostname.includes("glassdoor.com")) {
-    return "glassdoor";
-  } else if (hostname.includes("ziprecruiter.com")) {
-    return "ziprecruiter";
-  }
-  return null; // Site not supported
+  if (hostname.includes("linkedin.com")) return "linkedin";
+  if (hostname.match(/indeed\./i)) return "indeed";
+  if (hostname.includes("monster.com")) return "monster";
+  if (hostname.includes("builtin.com")) return "builtin";
+  if (hostname.includes("glassdoor.com")) return "glassdoor";
+  if (hostname.includes("ziprecruiter.com")) return "ziprecruiter";
+  return null;
 }
-// Initialize extension
+
 init();
 
+async function init() {
+  try {
+    currentSite = detectCurrentSite();
+    if (!currentSite) {
+      console.log("RedFlag: Unsupported site, not analyzing");
+      return;
+    }
+    console.log("RedFlag: Detected site:", currentSite);
+
+    const response = await sendMessageToBackground({ type: "GET_SETTINGS" });
+    if (response.success && response.settings) {
+      extensionEnabled = response.settings.extensionEnabled;
+    }
+    if (!extensionEnabled) {
+      console.log("RedFlag: Extension disabled, not analyzing");
+      return;
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", startAnalysis);
+    } else {
+      startAnalysis();
+    }
+    observePageChanges();
+  } catch (error) {
+    console.error("RedFlag: Initialization error:", error);
+  }
+}
+
+// Extract job data for the detected site
 function extractJobData() {
   let jobData = {
     jobTitle: "",
@@ -76,7 +93,6 @@ function extractJobData() {
   };
 
   if (currentSite === "indeed") {
-    // Job Title
     let titleEl =
       document.querySelector('[data-testid="jobsearch-JobInfoHeader-title"]') ||
       document.querySelector(
@@ -85,20 +101,17 @@ function extractJobData() {
       document.querySelector("h1.jobsearch-JobInfoHeader-title");
     jobData.jobTitle = titleEl ? titleEl.textContent.trim() : "";
 
-    // Company
     let companyEl =
       document.querySelector('[data-testid="inlineHeader-companyName"]') ||
       document.querySelector('[data-testid="jobsearch-InlineCompanyRating"]') ||
       document.querySelector(".jobsearch-CompanyReview--heading");
     jobData.company = companyEl ? companyEl.textContent.trim() : "";
 
-    // Description
     let descEl =
       document.querySelector("#jobDescriptionText") ||
       document.querySelector('[data-testid="jobsearch-jobDescriptionText"]');
     jobData.description = descEl ? descEl.textContent.trim() : "";
 
-    // Salary
     let salaryEl =
       document.querySelector('[data-testid="salary-snippet-container"]') ||
       document.querySelector(
@@ -107,7 +120,6 @@ function extractJobData() {
       document.querySelector(".jobsearch-JobMetadataHeader-item");
     jobData.salary = salaryEl ? salaryEl.textContent.trim() : "";
 
-    // Location
     let locEl =
       document.querySelector('[data-testid="job-location"]') ||
       document.querySelector(".jobsearch-JobInfoHeader-subtitle") ||
@@ -117,89 +129,34 @@ function extractJobData() {
     jobData.location = locEl ? locEl.textContent.trim() : "";
   }
 
-  // Add LinkedIn or other site logic as needed...
+  // Add support for other sites as needed...
 
   console.log("RedFlag: Extracted job data:", jobData);
   return jobData;
 }
 
-async function init() {
-  try {
-    // Detect current site
-    currentSite = detectCurrentSite();
-    if (!currentSite) {
-      console.log("RedFlag: Unsupported site, not analyzing");
-      return;
-    }
-
-    console.log("RedFlag: Detected site:", currentSite);
-
-    // Get extension settings
-    const response = await sendMessageToBackground({ type: "GET_SETTINGS" });
-    if (response.success && response.settings) {
-      extensionEnabled = response.settings.extensionEnabled;
-    }
-
-    if (!extensionEnabled) {
-      console.log("RedFlag: Extension disabled, not analyzing");
-      return;
-    }
-
-    // Wait for page to be ready
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", startAnalysis);
-    } else {
-      startAnalysis();
-    }
-
-    // Monitor for page changes (both LinkedIn and Indeed use SPA navigation)
-    observePageChanges();
-  } catch (error) {
-    console.error("RedFlag: Initialization error:", error);
-  }
-}
-
-// Start analysis of current job listing
 function startAnalysis() {
   if (!extensionEnabled || isAnalyzing) return;
-
-  console.log("RedFlag: Starting analysis");
-
-  // Debounce analysis to avoid excessive calls
   clearTimeout(startAnalysis.timeout);
   startAnalysis.timeout = setTimeout(() => {
     analyzeCurrentJob();
   }, JOBSCAN_CONFIG.debounceDelay);
 }
 
-// Main analysis function
 async function analyzeCurrentJob() {
   if (isAnalyzing) return;
-
   isAnalyzing = true;
-
   try {
-    // Extract job data from DOM
     const jobData = extractJobData();
-
     if (!jobData.jobTitle) {
       console.log("RedFlag: No job title found, skipping analysis");
       isAnalyzing = false;
       return;
     }
-
     currentJobData = jobData;
-
-    // Show analysis status
     injectStatusElement("Analyzing job listing...", "analyzing");
-
-    // Perform heuristic analysis
     const analysisResult = performHeuristicAnalysis(jobData);
-
-    // Display results
     displayAnalysisResult(analysisResult);
-
-    // Send results to background script
     await sendMessageToBackground({
       type: "ANALYSIS_RESULT",
       data: {
@@ -217,26 +174,14 @@ async function analyzeCurrentJob() {
   }
 }
 
-// Extract job data from current site DOM
-if (response.success && response.settings) {
-  extensionEnabled = response.settings.extensionEnabled;
-}
-
-// Perform heuristic analysis for scam detection
 function performHeuristicAnalysis(jobData) {
   const result = {
     riskScore: 0,
-    riskLevel: "low", // low, medium, high
+    riskLevel: "low",
     flags: [],
     reasons: [],
   };
 
-  // TODO: Implement core heuristic logic here
-  // This is where the main scam detection algorithms will go
-
-  // Example heuristic checks (placeholders for actual implementation):
-
-  // 1. Check for suspicious keywords in job title
   if (jobData.jobTitle) {
     const suspiciousKeywords = [
       "make money fast",
@@ -249,7 +194,6 @@ function performHeuristicAnalysis(jobData) {
       "financial freedom",
       "unlimited earning potential",
     ];
-
     const titleLower = jobData.jobTitle.toLowerCase();
     suspiciousKeywords.forEach((keyword) => {
       if (titleLower.includes(keyword)) {
@@ -260,7 +204,6 @@ function performHeuristicAnalysis(jobData) {
     });
   }
 
-  // 2. Check for grammar/spelling issues in description
   if (jobData.description) {
     const grammarIssues = analyzeGrammar(jobData.description);
     if (grammarIssues.score > 3) {
@@ -270,7 +213,6 @@ function performHeuristicAnalysis(jobData) {
     }
   }
 
-  // 3. Check for suspicious salary claims
   if (jobData.salary) {
     const salaryFlags = analyzeSalary(jobData.salary);
     if (salaryFlags.length > 0) {
@@ -280,7 +222,6 @@ function performHeuristicAnalysis(jobData) {
     }
   }
 
-  // 4. Check company information
   if (jobData.company) {
     const companyFlags = analyzeCompany(jobData.company);
     if (companyFlags.length > 0) {
@@ -290,32 +231,25 @@ function performHeuristicAnalysis(jobData) {
     }
   }
 
-  // Determine risk level based on score
   if (result.riskScore >= 50) {
     result.riskLevel = "high";
   } else if (result.riskScore >= 25) {
     result.riskLevel = "medium";
-  } else {
-    result.riskLevel = "low";
   }
 
   console.log("RedFlag: Analysis result:", result);
   return result;
 }
 
-// Analyze grammar and spelling issues (placeholder implementation)
 function analyzeGrammar(text) {
   const result = { score: 0, issues: [] };
-
-  // Simple heuristics for grammar issues
   const patterns = [
-    /\b\w+\s+\w+\s+\w+\s+\w+\s+\w+\s+\w+\s+\w+\s+[A-Z]/g, // Excessive caps
-    /[!]{2,}/g, // Multiple exclamation marks
-    /\$\$+/g, // Multiple dollar signs
-    /\b[A-Z]{3,}\b/g, // Excessive caps words
-    /\b\d+\$\b/g, // Improper dollar placement
+    /\b\w+\s+\w+\s+\w+\s+\w+\s+\w+\s+\w+\s+\w+\s+[A-Z]/g,
+    /[!]{2,}/g,
+    /\$\$+/g,
+    /\b[A-Z]{3,}\b/g,
+    /\b\d+\$\b/g,
   ];
-
   patterns.forEach((pattern) => {
     const matches = text.match(pattern);
     if (matches) {
@@ -323,38 +257,29 @@ function analyzeGrammar(text) {
       result.issues.push(`Pattern detected: ${pattern.source}`);
     }
   });
-
   return result;
 }
 
-// Analyze salary information for red flags
 function analyzeSalary(salaryText) {
   const flags = [];
   const salaryLower = salaryText.toLowerCase();
-
-  // Check for unrealistic salary claims
   const unrealisticPatterns = [
     /\$\d{4,}.*per day/i,
     /\$\d{3,}.*per hour/i,
     /earn up to \$\d{5,}/i,
     /make \$\d{4,}/i,
   ];
-
   unrealisticPatterns.forEach((pattern) => {
     if (pattern.test(salaryText)) {
       flags.push("Unrealistic salary claims detected");
     }
   });
-
   return flags;
 }
 
-// Analyze company information for red flags
 function analyzeCompany(companyName) {
   const flags = [];
   const companyLower = companyName.toLowerCase();
-
-  // Check for generic/suspicious company names
   const suspiciousNames = [
     "confidential",
     "private",
@@ -364,25 +289,18 @@ function analyzeCompany(companyName) {
     "financial services",
     "marketing company",
   ];
-
   suspiciousNames.forEach((name) => {
     if (companyLower.includes(name)) {
       flags.push(`Generic company name: "${name}"`);
     }
   });
-
   return flags;
 }
 
-// Inject status element into the page
 function injectStatusElement(message, status = "info") {
-  // Remove existing status element
   const existing = document.getElementById(JOBSCAN_CONFIG.statusElementId);
-  if (existing) {
-    existing.remove();
-  }
+  if (existing) existing.remove();
 
-  // Create new status element
   const statusElement = document.createElement("div");
   statusElement.id = JOBSCAN_CONFIG.statusElementId;
   statusElement.className = `jobscan-status jobscan-status-${status}`;
@@ -393,9 +311,7 @@ function injectStatusElement(message, status = "info") {
     </div>
   `;
 
-  // Find insertion point based on current site
   let containers = [];
-
   if (currentSite === "linkedin") {
     containers = [
       ".job-details-jobs-unified-top-card__primary-description-container",
@@ -423,18 +339,14 @@ function injectStatusElement(message, status = "info") {
       break;
     }
   }
-
   if (!inserted) {
-    // Fallback: append to body
     document.body.appendChild(statusElement);
   }
 }
 
-// Display analysis results
 function displayAnalysisResult(result) {
   let message = "";
   let status = "info";
-
   switch (result.riskLevel) {
     case "high":
       message = `⚠️ High risk job listing detected (Score: ${result.riskScore})`;
@@ -449,48 +361,30 @@ function displayAnalysisResult(result) {
       status = "success";
       break;
   }
-
   if (result.reasons.length > 0) {
     message += `\nReasons: ${result.reasons.join(", ")}`;
   }
-
   injectStatusElement(message, status);
 }
 
-// Observe page changes for SPA navigation
 function observePageChanges() {
   let currentUrl = window.location.href;
-
-  // Monitor URL changes
   const urlObserver = new MutationObserver(() => {
     if (window.location.href !== currentUrl) {
       currentUrl = window.location.href;
       console.log("RedFlag: URL changed to", currentUrl);
-
-      // Remove existing status element
       const existing = document.getElementById(JOBSCAN_CONFIG.statusElementId);
-      if (existing) {
-        existing.remove();
-      }
-
-      // Start analysis after delay to allow page to load
+      if (existing) existing.remove();
       setTimeout(startAnalysis, 2000);
     }
   });
+  urlObserver.observe(document.body, { childList: true, subtree: true });
 
-  urlObserver.observe(document.body, {
-    childList: true,
-    subtree: true,
-  });
-
-  // Also monitor for DOM changes that might indicate new job content
   const contentObserver = new MutationObserver(() => {
-    // Only trigger if we're on a job page and significant content changed
     if (window.location.href.includes("/jobs/view/")) {
       startAnalysis();
     }
   });
-
   contentObserver.observe(document.body, {
     childList: true,
     subtree: true,
@@ -498,7 +392,6 @@ function observePageChanges() {
   });
 }
 
-// Send message to background script
 function sendMessageToBackground(message) {
   return new Promise((resolve, reject) => {
     chrome.runtime.sendMessage(message, (response) => {
@@ -514,7 +407,6 @@ function sendMessageToBackground(message) {
 // Listen for messages from popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log("RedFlag: Content script received message:", message);
-
   switch (message.type) {
     case "GET_CURRENT_JOB":
       sendResponse({
@@ -523,28 +415,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         url: window.location.href,
       });
       break;
-
     case "REANALYZE":
       startAnalysis();
       sendResponse({ success: true });
       break;
-
     case "TOGGLE_EXTENSION":
       extensionEnabled = message.enabled;
       if (!extensionEnabled) {
-        // Remove status element when disabled
         const existing = document.getElementById(
           JOBSCAN_CONFIG.statusElementId
         );
-        if (existing) {
-          existing.remove();
-        }
+        if (existing) existing.remove();
       } else {
         startAnalysis();
       }
       sendResponse({ success: true });
       break;
-
     default:
       sendResponse({ success: false, error: "Unknown message type" });
   }
