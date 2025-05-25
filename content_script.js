@@ -66,6 +66,63 @@ function detectCurrentSite() {
 // Initialize extension
 init();
 
+function extractJobData() {
+  let jobData = {
+    jobTitle: "",
+    company: "",
+    description: "",
+    salary: "",
+    location: "",
+  };
+
+  if (currentSite === "indeed") {
+    // Job Title
+    let titleEl =
+      document.querySelector('[data-testid="jobsearch-JobInfoHeader-title"]') ||
+      document.querySelector(
+        'h1[data-testid="jobsearch-JobInfoHeader-title"]'
+      ) ||
+      document.querySelector("h1.jobsearch-JobInfoHeader-title");
+    jobData.jobTitle = titleEl ? titleEl.textContent.trim() : "";
+
+    // Company
+    let companyEl =
+      document.querySelector('[data-testid="inlineHeader-companyName"]') ||
+      document.querySelector('[data-testid="jobsearch-InlineCompanyRating"]') ||
+      document.querySelector(".jobsearch-CompanyReview--heading");
+    jobData.company = companyEl ? companyEl.textContent.trim() : "";
+
+    // Description
+    let descEl =
+      document.querySelector("#jobDescriptionText") ||
+      document.querySelector('[data-testid="jobsearch-jobDescriptionText"]');
+    jobData.description = descEl ? descEl.textContent.trim() : "";
+
+    // Salary
+    let salaryEl =
+      document.querySelector('[data-testid="salary-snippet-container"]') ||
+      document.querySelector(
+        '[data-testid="jobsearch-JobMetadataHeader-item"]'
+      ) ||
+      document.querySelector(".jobsearch-JobMetadataHeader-item");
+    jobData.salary = salaryEl ? salaryEl.textContent.trim() : "";
+
+    // Location
+    let locEl =
+      document.querySelector('[data-testid="job-location"]') ||
+      document.querySelector(".jobsearch-JobInfoHeader-subtitle") ||
+      document.querySelector(
+        '[data-testid="jobsearch-JobInfoHeader-subtitle"]'
+      );
+    jobData.location = locEl ? locEl.textContent.trim() : "";
+  }
+
+  // Add LinkedIn or other site logic as needed...
+
+  console.log("RedFlag: Extracted job data:", jobData);
+  return jobData;
+}
+
 async function init() {
   try {
     // Detect current site
