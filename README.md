@@ -1,7 +1,5 @@
 # RedFlag: Your Job Scam Detector
 
----
-
 Tired of sifting through suspicious job postings? **RedFlag** is a browser extension designed to help you quickly identify potential job scams on LinkedIn and Indeed, right in your browser. Using intelligent, client-side analysis, RedFlag gives you real-time insights so you can apply with confidence.
 
 ##  Why RedFlag?
