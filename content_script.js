@@ -49,7 +49,8 @@ function detectCurrentSite() {
   const hostname = window.location.hostname;
   if (hostname.includes("linkedin.com")) {
     return "linkedin";
-  } else if (hostname.includes("indeed.com")) {
+  } else if (hostname.match(/indeed\./i)) {
+    // matches indeed.com, indeed.co.uk, www.indeed.com, etc.
     return "indeed";
   } else if (hostname.includes("monster.com")) {
     return "monster";
@@ -62,7 +63,6 @@ function detectCurrentSite() {
   }
   return null; // Site not supported
 }
-
 // Initialize extension
 init();
 

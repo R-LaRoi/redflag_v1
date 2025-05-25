@@ -22,7 +22,7 @@
   "content_scripts": [
     {
       "matches": [
-        "*://*.linkedin.com/*",
+     "*://*.indeed.*/*",
     "*://*.indeed.com/*",
     "*://*.monster.com/*",
     "*://*.builtin.com/*",
