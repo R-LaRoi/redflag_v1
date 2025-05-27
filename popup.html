@@ -7,13 +7,13 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <div class="popup-container">
+    <div class="popup-container jobscan-extension-root">
       <!-- Header -->
       <header class="popup-header">
         <div class="header-content">
           <div class="logo">
-            <div class="logo-icon"><img src="./rfman.png" /></div>
-            <span class="logo-text">Red Flag</span>
+            <img src="./rfman.png" alt="RedFlag Mascot" class="logo-icon-img" />
+            <span class="logo-main-text">RedFlag</span>
           </div>
           <div class="version">v1.0.0</div>
         </div>
@@ -124,7 +124,10 @@
     </div>
 
     <!-- Report Modal -->
-    <div id="report-modal" class="modal" style="display: none">
+    <div
+      id="report-modal"
+      class="modal jobscan-extension-root"
+      style="display: none">
       <div class="modal-content">
         <div class="modal-header">
           <h2>Report Job Listing</h2>
@@ -149,7 +152,7 @@
                 id="report-comment"
                 class="form-control"
                 rows="3"
-                placeholder="Provide additional context about why you're reporting this job..."></textarea>
+                placeholder="Provide additional context..."></textarea>
             </div>
             <div class="form-actions">
               <button

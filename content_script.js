@@ -148,9 +148,12 @@ async function analyzeCurrentJob() {
   isAnalyzing = true;
   try {
     const jobData = extractJobData();
-    if (!jobData.jobTitle) {
-      console.log("RedFlag: No job title found, skipping analysis");
+    if (!jobData || !jobData.jobTitle) {
+      // Added check for jobData itself
+      console.log("RedFlag: No job data or job title found, skipping analysis");
       isAnalyzing = false;
+      // Optionally inject a status if needed, or just silently skip
+      // injectStatusElement("Could not find job details to analyze.", "info");
       return;
     }
     currentJobData = jobData;
@@ -167,8 +170,12 @@ async function analyzeCurrentJob() {
       },
     });
   } catch (error) {
-    console.error("RedFlag: Analysis error:", error);
-    injectStatusElement("Analysis failed", "error");
+    console.error(
+      "RedFlag: Analysis error during analyzeCurrentJob:",
+      error,
+      error.stack
+    );
+    injectStatusElement("Analysis failed. Check console for details.", "error");
   } finally {
     isAnalyzing = false;
   }
@@ -182,7 +189,13 @@ function performHeuristicAnalysis(jobData) {
     reasons: [],
   };
 
-  if (jobData.jobTitle) {
+  // Ensure jobData properties are strings, default to empty string if null/undefined
+  const jobTitle = jobData.jobTitle || "";
+  const description = jobData.description || "";
+  const salary = jobData.salary || "";
+  const company = jobData.company || "";
+
+  if (jobTitle) {
     const suspiciousKeywords = [
       "make money fast",
       "work from home",
@@ -194,7 +207,7 @@ function performHeuristicAnalysis(jobData) {
       "financial freedom",
       "unlimited earning potential",
     ];
-    const titleLower = jobData.jobTitle.toLowerCase();
+    const titleLower = jobTitle.toLowerCase();
     suspiciousKeywords.forEach((keyword) => {
       if (titleLower.includes(keyword)) {
         result.riskScore += 20;
@@ -204,17 +217,20 @@ function performHeuristicAnalysis(jobData) {
     });
   }
 
-  if (jobData.description) {
-    const grammarIssues = analyzeGrammar(jobData.description);
+  if (description) {
+    const grammarIssues = analyzeGrammar(description);
     if (grammarIssues.score > 3) {
+      // This threshold might need adjustment based on new patterns
       result.riskScore += 15;
       result.flags.push("poor_grammar");
-      result.reasons.push("Multiple grammar/spelling issues detected");
+      result.reasons.push(
+        `Multiple grammar/spelling issues detected (${grammarIssues.issues.length} types)`
+      );
     }
   }
 
-  if (jobData.salary) {
-    const salaryFlags = analyzeSalary(jobData.salary);
+  if (salary) {
+    const salaryFlags = analyzeSalary(salary);
     if (salaryFlags.length > 0) {
       result.riskScore += 10;
       result.flags.push("suspicious_salary");
@@ -222,8 +238,8 @@ function performHeuristicAnalysis(jobData) {
     }
   }
 
-  if (jobData.company) {
-    const companyFlags = analyzeCompany(jobData.company);
+  if (company) {
+    const companyFlags = analyzeCompany(company);
     if (companyFlags.length > 0) {
       result.riskScore += 25;
       result.flags.push("suspicious_company");
@@ -243,18 +259,36 @@ function performHeuristicAnalysis(jobData) {
 
 function analyzeGrammar(text) {
   const result = { score: 0, issues: [] };
+  if (!text || typeof text !== "string") {
+    return result;
+  }
   const patterns = [
-    /\b\w+\s+\w+\s+\w+\s+\w+\s+\w+\s+\w+\s+\w+\s+[A-Z]/g,
     /[!]{2,}/g,
+    /\?{2,}/g,
     /\$\$+/g,
-    /\b[A-Z]{3,}\b/g,
-    /\b\d+\$\b/g,
+    /\b\d+\s*\$\b/g,
+    /\b[A-Z]{7,}\b/g,
+    /\b\w+[.,?!:;]\w+\b/g,
+    /\s+[.,?!:;]\B/g,
+    /(.)\1{3,}/g,
   ];
+
   patterns.forEach((pattern) => {
-    const matches = text.match(pattern);
-    if (matches) {
-      result.score += matches.length;
-      result.issues.push(`Pattern detected: ${pattern.source}`);
+    try {
+      const matches = text.match(pattern);
+      if (matches) {
+        result.score += matches.length; //
+        if (!result.issues.includes(pattern.source)) {
+          // Avoid duplicate issue types
+          result.issues.push(pattern.source);
+        }
+      }
+    } catch (e) {
+      console.warn(
+        "RedFlag: Error matching pattern in analyzeGrammar",
+        pattern,
+        e
+      );
     }
   });
   return result;
@@ -262,6 +296,9 @@ function analyzeGrammar(text) {
 
 function analyzeSalary(salaryText) {
   const flags = [];
+  if (!salaryText || typeof salaryText !== "string") {
+    return flags;
+  }
   const salaryLower = salaryText.toLowerCase();
   const unrealisticPatterns = [
     /\$\d{4,}.*per day/i,
@@ -270,8 +307,16 @@ function analyzeSalary(salaryText) {
     /make \$\d{4,}/i,
   ];
   unrealisticPatterns.forEach((pattern) => {
-    if (pattern.test(salaryText)) {
-      flags.push("Unrealistic salary claims detected");
+    try {
+      if (pattern.test(salaryText)) {
+        flags.push("Unrealistic salary claims detected");
+      }
+    } catch (e) {
+      console.warn(
+        "RedFlag: Error matching pattern in analyzeSalary",
+        pattern,
+        e
+      );
     }
   });
   return flags;
@@ -279,6 +324,9 @@ function analyzeSalary(salaryText) {
 
 function analyzeCompany(companyName) {
   const flags = [];
+  if (!companyName || typeof companyName !== "string") {
+    return flags;
+  }
   const companyLower = companyName.toLowerCase();
   const suspiciousNames = [
     "confidential",
@@ -303,7 +351,11 @@ function injectStatusElement(message, status = "info") {
 
   const statusElement = document.createElement("div");
   statusElement.id = JOBSCAN_CONFIG.statusElementId;
-  statusElement.className = `jobscan-status jobscan-status-${status}`;
+  statusElement.classList.add(
+    "jobscan-extension-root",
+    "jobscan-status",
+    `jobscan-status-${status}`
+  );
   statusElement.innerHTML = `
     <div class="jobscan-status-content">
       <span class="jobscan-icon">🚩</span>
@@ -319,6 +371,7 @@ function injectStatusElement(message, status = "info") {
       ".job-details-jobs-unified-top-card",
       ".jobs-unified-top-card",
       ".jobs-details",
+      "main",
     ];
   } else if (currentSite === "indeed") {
     containers = [
@@ -327,6 +380,8 @@ function injectStatusElement(message, status = "info") {
       ".jobsearch-JobComponent",
       ".jobsearch-SerpJobCard",
       "#viewJobSSRRoot",
+      "#jobsearch-ViewjobLayout-jobDisplay",
+      "body",
     ];
   }
 
@@ -334,12 +389,20 @@ function injectStatusElement(message, status = "info") {
   for (const selector of containers) {
     const container = document.querySelector(selector);
     if (container) {
-      container.insertBefore(statusElement, container.firstChild);
+      if (container.firstChild) {
+        container.insertBefore(statusElement, container.firstChild);
+      } else {
+        container.appendChild(statusElement);
+      }
       inserted = true;
+      console.log("RedFlag: Status element injected into:", selector);
       break;
     }
   }
   if (!inserted) {
+    console.warn(
+      "RedFlag: Could not find a suitable container, appending to body."
+    );
     document.body.appendChild(statusElement);
   }
 }
@@ -349,20 +412,25 @@ function displayAnalysisResult(result) {
   let status = "info";
   switch (result.riskLevel) {
     case "high":
-      message = `⚠️ High risk job listing detected (Score: ${result.riskScore})`;
+      message = `High risk job listing detected (Score: ${result.riskScore})`;
       status = "warning";
       break;
     case "medium":
-      message = `⚠️ Medium risk job listing (Score: ${result.riskScore})`;
+      message = `Medium risk job listing (Score: ${result.riskScore})`;
       status = "caution";
       break;
     case "low":
-      message = `✅ No significant red flags detected (Score: ${result.riskScore})`;
+      message = `No significant red flags detected (Score: ${result.riskScore})`;
       status = "success";
       break;
+    default:
+      message = `Analysis complete (Score: ${result.riskScore})`;
+      status = "info";
   }
   if (result.reasons.length > 0) {
-    message += `\nReasons: ${result.reasons.join(", ")}`;
+    message += `\nIdentified Flags: ${result.reasons.join("; ")}`;
+  } else if (result.riskLevel === "low") {
+    message += `\nLooks generally safe, but always do your own research.`;
   }
   injectStatusElement(message, status);
 }
@@ -375,27 +443,58 @@ function observePageChanges() {
       console.log("RedFlag: URL changed to", currentUrl);
       const existing = document.getElementById(JOBSCAN_CONFIG.statusElementId);
       if (existing) existing.remove();
-      setTimeout(startAnalysis, 2000);
+      setTimeout(startAnalysis, 1500);
     }
   });
-  urlObserver.observe(document.body, { childList: true, subtree: true });
-
-  const contentObserver = new MutationObserver(() => {
-    if (window.location.href.includes("/jobs/view/")) {
-      startAnalysis();
-    }
-  });
-  contentObserver.observe(document.body, {
+  urlObserver.observe(document.documentElement, {
     childList: true,
     subtree: true,
-    attributes: false,
   });
+
+  let jobContentObserverDebounceTimer;
+  const jobContentObserver = new MutationObserver((mutationsList) => {
+    for (let mutation of mutationsList) {
+      if (mutation.type === "childList" || mutation.type === "subtree") {
+        const jobTitleElement = document.querySelector(
+          JOBSCAN_CONFIG.selectors[currentSite]?.jobTitle
+        );
+        const jobDescriptionElement = document.querySelector(
+          JOBSCAN_CONFIG.selectors[currentSite]?.description
+        );
+
+        if (jobTitleElement && jobDescriptionElement) {
+          clearTimeout(jobContentObserverDebounceTimer);
+          jobContentObserverDebounceTimer = setTimeout(() => {
+            console.log(
+              "RedFlag: Job content potentially changed, re-analyzing."
+            );
+            startAnalysis();
+          }, 2000);
+          return;
+        }
+      }
+    }
+  });
+
+  if (currentSite && JOBSCAN_CONFIG.selectors[currentSite]) {
+    jobContentObserver.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: false,
+    });
+  }
 }
 
 function sendMessageToBackground(message) {
   return new Promise((resolve, reject) => {
     chrome.runtime.sendMessage(message, (response) => {
       if (chrome.runtime.lastError) {
+        console.error(
+          "RedFlag: Error sending message to background:",
+          chrome.runtime.lastError.message,
+          "Message:",
+          message
+        );
         reject(chrome.runtime.lastError);
       } else {
         resolve(response);
@@ -404,11 +503,13 @@ function sendMessageToBackground(message) {
   });
 }
 
-// Listen for messages from popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log("RedFlag: Content script received message:", message);
   switch (message.type) {
     case "GET_CURRENT_JOB":
+      if (!currentJobData) {
+        currentJobData = extractJobData();
+      }
       sendResponse({
         success: true,
         jobData: currentJobData,
@@ -421,17 +522,26 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       break;
     case "TOGGLE_EXTENSION":
       extensionEnabled = message.enabled;
+      const existingStatusElement = document.getElementById(
+        JOBSCAN_CONFIG.statusElementId
+      );
       if (!extensionEnabled) {
-        const existing = document.getElementById(
-          JOBSCAN_CONFIG.statusElementId
-        );
-        if (existing) existing.remove();
+        if (existingStatusElement) existingStatusElement.remove();
+        console.log("RedFlag: Extension explicitly disabled via popup.");
       } else {
+        console.log(
+          "RedFlag: Extension explicitly enabled via popup, starting analysis."
+        );
         startAnalysis();
       }
       sendResponse({ success: true });
       break;
     default:
+      console.warn(
+        "RedFlag: Content script received unknown message type:",
+        message.type
+      );
       sendResponse({ success: false, error: "Unknown message type" });
   }
+  return true;
 });
