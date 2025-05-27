@@ -1,5 +1,5 @@
 // RedFlag Content Script
-// Runs on LinkedIn, Indeed, and other job boards to analyze listings for potential scams
+// Runs on LinkedIn, Indeed, and ZipRecruiter to analyze listings for potential scams
 
 console.log("RedFlag: Content script loaded on", window.location.href);
 
@@ -29,33 +29,13 @@ const JOBSCAN_CONFIG = {
       location:
         '[data-testid="job-location"], .jobsearch-JobInfoHeader-subtitle div, .jobsearch-JobInfoHeader-subtitle span, [data-testid="jobsearch-JobInfoHeader-subtitle"]',
     },
-    monster: {
-      jobTitle: "h1.job_title",
-      company: ".company a, .job_company_name",
-      description: "[name='jobDescription']",
-      salary: ".mux-job-cards-salary",
-      location: ".location",
-    },
-    builtin: {
-      jobTitle: ".job-title",
-      company: ".company-title",
-      description: ".job-description",
-      salary: ".salary-value",
-      location: ".job-location",
-    },
-    glassdoor: {
-      jobTitle: ".JobDetails_jobTitle__I5FBL",
-      company: "[data-test='employer-name']",
-      description: ".JobDetails_jobDescription__uW_fK",
-      salary: "[data-test='detailSalary']",
-      location: "[data-test='location']",
-    },
     ziprecruiter: {
-      jobTitle: ".job_title span",
-      company: ".job_details_link.hiring_company_item",
+      jobTitle: ".job_title span, h1.job_title", // Added h1.job_title for more robustness
+      company:
+        ".job_details_link.hiring_company_item, a.job_details_link[href*='/c/']", // Added alternative company selector
       description: ".job_description",
-      salary: ".perk_item_body",
-      location: "span.location_text",
+      salary: ".perk_item_body, span[data-name='perk_item_body_salary']", // Added specific salary perk selector
+      location: "span.location_text, .job_location .value", // Added alternative location selector
     },
   },
   statusElementId: "jobscan-status",
@@ -72,9 +52,6 @@ function detectCurrentSite() {
   const hostname = window.location.hostname;
   if (hostname.includes("linkedin.com")) return "linkedin";
   if (hostname.match(/indeed\./i)) return "indeed";
-  if (hostname.includes("monster.com")) return "monster";
-  if (hostname.includes("builtin.com")) return "builtin";
-  if (hostname.includes("glassdoor.com")) return "glassdoor";
   if (hostname.includes("ziprecruiter.com")) return "ziprecruiter";
   return null;
 }
@@ -586,10 +563,12 @@ function injectStatusElement(message, status = "info") {
       "#jobsearch-ViewjobLayout-jobDisplay",
       "body",
     ],
-    monster: [".job_title_and_company", "header", "main", "body"],
-    builtin: [".block-company-job-header", "main", "body"],
-    glassdoor: [".JobDetails_jobDetailsHeader__qKuvs", "main", "body"],
-    ziprecruiter: [".job_header", "main", "body"],
+    ziprecruiter: [
+      ".job_header",
+      "div[class^='JobDetailsStickyHeader']",
+      "main",
+      "body",
+    ], // Added ZipRecruiter specific header
   };
   containers = siteSpecificContainers[currentSite] || ["body"];
 
@@ -711,6 +690,8 @@ function observePageChanges() {
               ? ".jobs-details__main-content"
               : currentSite === "indeed"
               ? ".jobsearch-ViewJobLayout-jobDisplay"
+              : currentSite === "ziprecruiter"
+              ? ".job_details_container" // ZipRecruiter main content area
               : "body"
           );
           if (mainJobContainer && mainJobContainer.contains(mutation.target)) {
@@ -740,6 +721,11 @@ function observePageChanges() {
       document.querySelector("#jobsearch-ViewjobLayout") ||
       document.querySelector("#indeedApplyButtonRoot") ||
       document.body;
+  else if (currentSite === "ziprecruiter")
+    observerRoot =
+      document.querySelector("#job_details") ||
+      document.querySelector("main") ||
+      document.body; // ZipRecruiter specific root
 
   if (currentSite && JOBSCAN_CONFIG.selectors[currentSite]) {
     jobContentObserver.observe(observerRoot, {
@@ -788,6 +774,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         currentJobData = extractJobData();
         if (currentJobData && currentJobData.jobTitle) {
           currentAnalysisResult = performHeuristicAnalysis(currentJobData);
+          currentAnalysisResult.timestamp = Date.now(); // Add timestamp to analysis
         }
       }
       sendResponse({

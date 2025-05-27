@@ -11,9 +11,6 @@
   "host_permissions": [
    "*://*.linkedin.com/*",
     "*://*.indeed.com/*",
-    "*://*.monster.com/*",
-    "*://*.builtin.com/*",
-    "*://*.glassdoor.com/*",
     "*://*.ziprecruiter.com/*"
   ],
   "background": {
@@ -26,9 +23,6 @@
   "*://*.indeed.com/*",
   "*://*.indeed.co.uk/*",
   "*://*.indeed.ca/*",
-  "*://*.monster.com/*",
-  "*://*.builtin.com/*",
-  "*://*.glassdoor.com/*",
   "*://*.ziprecruiter.com/*"
       ],
       "js": ["content_script.js"],

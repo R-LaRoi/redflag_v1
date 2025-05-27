@@ -33,9 +33,6 @@ RedFlag currently supports heuristic analysis on the following job boards:
 
 - LinkedIn
 - Indeed
-- Monster
-- Built In
-- Glassdoor
 - ZipRecruiter
 
 ## Installation
@@ -126,7 +123,6 @@ Contributions are welcome! If you have ideas for improvements, new features, or 
 7.  **Create a new Pull Request.**
 
 Please ensure your code follows the existing style and that any new features are well-documented.
-
 
 ## 📞 Contact / Feedback
 

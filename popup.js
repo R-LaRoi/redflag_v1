@@ -33,6 +33,11 @@ const elements = {
 let currentTab = null;
 let currentJobData = null;
 let settings = {};
+const SUPPORTED_SITES = {
+  linkedin: "LinkedIn",
+  indeed: "Indeed",
+  ziprecruiter: "ZipRecruiter",
+};
 
 // Initialize popup
 document.addEventListener("DOMContentLoaded", async () => {
@@ -49,32 +54,45 @@ document.addEventListener("DOMContentLoaded", async () => {
 async function initializePopup() {
   console.log("RedFlag: Initializing popup");
 
-  // Get current tab
   const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
   currentTab = tabs[0];
 
   if (!currentTab || !currentTab.url) {
-    // Added !currentTab.url check
     showError("Unable to access current tab information");
     disableJobActions();
     return;
   }
 
-  // Load settings first, as they might influence UI
   await loadSettings();
 
-  // Check if we're on a supported job site
-  const isLinkedIn = currentTab.url.includes("linkedin.com");
-  const isIndeed = currentTab.url.includes("indeed.com");
+  const currentSiteKey = getCurrentSiteKey(currentTab.url);
 
-  if (isLinkedIn || isIndeed) {
-    await loadCurrentJobData(); // Always try to load job data if on a supported domain
+  if (currentSiteKey) {
+    await loadCurrentJobData();
   } else {
-    showStatus("Navigate to LinkedIn or Indeed to use RedFlag", "info");
+    showStatus(
+      `Navigate to a supported job site (${Object.values(SUPPORTED_SITES).join(
+        ", "
+      )}) to use RedFlag`,
+      "info"
+    );
     disableJobActions();
   }
 
   await loadRecentReports();
+}
+
+function getCurrentSiteKey(url) {
+  if (!url) return null;
+  if (url.includes("linkedin.com")) return "linkedin";
+  if (url.match(/indeed\./i)) return "indeed";
+  if (url.includes("ziprecruiter.com")) return "ziprecruiter";
+  return null;
+}
+
+function getCurrentSiteDisplayName(url) {
+  const key = getCurrentSiteKey(url);
+  return key ? SUPPORTED_SITES[key] : "Unsupported Site";
 }
 
 // Setup event listeners
@@ -109,7 +127,6 @@ async function loadSettings() {
         "RedFlag: Failed to load settings from background",
         response.error
       );
-      // Use default UI values if settings fail to load
       settings = {
         extensionEnabled: elements.enableToggle.checked,
         showWarnings: elements.warningsToggle.checked,
@@ -128,29 +145,25 @@ async function loadCurrentJobData() {
     const response = await sendMessageToTab({ type: "GET_CURRENT_JOB" });
 
     if (response && response.success) {
-      currentJobData = response.jobData; // This might be null or have empty fields
+      currentJobData = response.jobData;
 
       if (currentJobData && currentJobData.jobTitle) {
-        updateJobDisplay(response.url); // Pass URL from content script
+        updateJobDisplay(response.url);
         enableJobActions();
-        // Display analysis result from content script
         if (response.analysisResult) {
           displayAnalysisStatus(response.analysisResult);
         } else {
           showStatus("Job data loaded, awaiting analysis results...", "info");
         }
       } else {
-        // Content script did not find a job title, so likely not a specific job page
-        currentJobData = null; // Ensure it's null
-        const siteName = currentTab.url.includes("linkedin.com")
-          ? "LinkedIn"
-          : "Indeed";
+        currentJobData = null;
+        const siteName = getCurrentSiteDisplayName(currentTab.url);
         showStatus(
           `No job details found on this ${siteName} page. Try a specific job listing.`,
           "info"
         );
         disableJobActions();
-        updateJobDisplay(response.url); // Clear or hide job info section
+        updateJobDisplay(response.url);
       }
     } else {
       currentJobData = null;
@@ -163,9 +176,7 @@ async function loadCurrentJobData() {
       "RedFlag: Error loading job data from content script:",
       error
     );
-    const siteName = currentTab.url.includes("linkedin.com")
-      ? "LinkedIn"
-      : "Indeed";
+    const siteName = getCurrentSiteDisplayName(currentTab.url);
     if (
       error.message &&
       error.message.includes("Could not establish connection")
@@ -245,7 +256,6 @@ async function handleEnableToggle() {
   const enabled = elements.enableToggle.checked;
   try {
     await saveSettings({ extensionEnabled: enabled });
-    // Attempt to send message to tab, but handle if it fails (e.g., no content script on page)
     try {
       await sendMessageToTab({
         type: "TOGGLE_EXTENSION",
@@ -259,17 +269,18 @@ async function handleEnableToggle() {
     }
 
     if (enabled) {
-      // If enabling, and on a supported page, try to re-load/re-analyze
-      const isLinkedIn = currentTab.url.includes("linkedin.com");
-      const isIndeed = currentTab.url.includes("indeed.com");
-      if (isLinkedIn || isIndeed) {
-        await loadCurrentJobData(); // This will trigger analysis if job data is found
+      const currentSiteKey = getCurrentSiteKey(currentTab.url);
+      if (currentSiteKey) {
+        await loadCurrentJobData();
       } else {
-        showStatus("RedFlag enabled. Navigate to a job page.", "success");
+        showStatus(
+          `RedFlag enabled. Navigate to a supported job page.`,
+          "success"
+        );
       }
     } else {
       showStatus("RedFlag disabled", "info");
-      disableJobActions(); // Also clear job info if disabling
+      disableJobActions();
       currentJobData = null;
       updateJobDisplay();
     }
@@ -278,7 +289,7 @@ async function handleEnableToggle() {
       error && error.message ? error.message : JSON.stringify(error);
     console.error("RedFlag: Error toggling extension:", message, error);
     showError("Could not toggle extension state.");
-    elements.enableToggle.checked = !enabled; // Revert on error
+    elements.enableToggle.checked = !enabled;
   }
 }
 
@@ -287,10 +298,9 @@ async function handleWarningsToggle() {
   try {
     await saveSettings({ showWarnings: showWarnings });
     console.log("RedFlag: Warnings toggle updated:", showWarnings);
-    // Optionally, tell content script to update its display behavior if it relies on this setting directly
   } catch (error) {
     console.error("RedFlag: Error updating warnings setting:", error);
-    elements.warningsToggle.checked = !showWarnings; // Revert on error
+    elements.warningsToggle.checked = !showWarnings;
   }
 }
 
@@ -299,7 +309,6 @@ async function handleAnalysisModeChange() {
   try {
     await saveSettings({ analysisMode: analysisMode });
     console.log("RedFlag: Analysis mode updated:", analysisMode);
-    // If on a job page, trigger reanalysis with new mode
     if (currentJobData && currentJobData.jobTitle) {
       await handleReanalyze();
     }
@@ -310,7 +319,6 @@ async function handleAnalysisModeChange() {
 
 function handleReportJob() {
   if (!currentJobData || !currentJobData.jobTitle) {
-    // Check for jobTitle
     showError("No job data available to report");
     return;
   }
@@ -322,12 +330,9 @@ async function handleReanalyze() {
     showStatus("Reanalyzing job...", "loading");
     const response = await sendMessageToTab({ type: "REANALYZE" });
     if (response && response.success) {
-      // Content script will re-send ANALYSIS_RESULT, popup doesn't need to show "complete"
-      // Instead, we'll re-load job data which includes the new analysis.
-      // Add a small delay to allow content script to finish and send its result.
       setTimeout(async () => {
         await loadCurrentJobData();
-      }, 1500); // Adjusted delay
+      }, 1500);
     } else {
       showStatus(
         "Reanalysis request failed",
@@ -353,7 +358,7 @@ async function handleReportSubmit(e) {
 
   try {
     const reportData = {
-      url: currentTab.url, // Use the active tab's URL
+      url: currentTab.url,
       jobTitle: currentJobData?.jobTitle || "Unknown Job Title",
       company: currentJobData?.company || "Unknown Company",
       reportType: reportType,
@@ -490,7 +495,6 @@ function sendMessageToBackground(message) {
 function sendMessageToTab(message) {
   return new Promise((resolve, reject) => {
     if (!currentTab || !currentTab.id) {
-      // Added !currentTab.id check
       reject(new Error("No valid current tab to send message to."));
       return;
     }
