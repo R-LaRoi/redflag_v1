@@ -135,5 +135,5 @@ This project is licensed under the **Apache-2.0 License**. See the (soon to be a
 
 Encounter a bug? Have a suggestion?
 
-- **Open an Issue**: If you've found a bug or have a feature request, please [open an issue on GitHub](https://github.com/YOUR_USERNAME/YOUR_REPOSITORY/issues) (replace with your actual repository link).
+- **Open an Issue**: If you've found a bug or have a feature request, please [open an issue on GitHub](https://github.com/R-LaRoi/redflag_v1/edit/main/README.md))
 - **Feedback**: We appreciate your feedback to make RedFlag better!
