@@ -9,11 +9,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   switch (message.type) {
     case "ANALYSIS_RESULT":
-      storeAnalysisResult(message.data, sender);
-      break;
+      storeAnalysisResult(message.data, sender, sendResponse);
+      return true; // Indicate async response
     case "USER_REPORT":
-      storeUserReport(message.data);
-      break;
+      storeUserReport(message.data, sendResponse);
+      return true; // Indicate async response
     case "GET_SETTINGS":
       fetchSettings(sendResponse);
       return true; // Async response
@@ -25,11 +25,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       return true; // Async response
     default:
       console.warn("RedFlag: Unknown message type:", message.type);
+    // Optionally send a response for unhandled types if senders expect it
+    // sendResponse({ success: false, error: "Unknown message type" });
   }
 });
 
 // Store analysis results from content script
-function storeAnalysisResult(data, sender) {
+function storeAnalysisResult(data, sender, sendResponse) {
   console.log("RedFlag: Analysis result received:", data);
 
   const analysis = {
@@ -44,13 +46,26 @@ function storeAnalysisResult(data, sender) {
   chrome.storage.local.get(["recentAnalyses"], (result) => {
     const analyses = result.recentAnalyses || [];
     analyses.unshift(analysis);
-    if (analyses.length > 50) analyses.length = 50;
-    chrome.storage.local.set({ recentAnalyses: analyses });
+    if (analyses.length > 50) analyses.length = 50; // Limit stored analyses
+    chrome.storage.local.set({ recentAnalyses: analyses }, () => {
+      if (chrome.runtime.lastError) {
+        console.error(
+          "RedFlag: Error storing analysis result:",
+          chrome.runtime.lastError
+        );
+        sendResponse({
+          success: false,
+          error: chrome.runtime.lastError.message,
+        });
+      } else {
+        sendResponse({ success: true });
+      }
+    });
   });
 }
 
 // Store user reports from popup
-function storeUserReport(data) {
+function storeUserReport(data, sendResponse) {
   console.log("RedFlag: User report received:", data);
 
   const report = {
@@ -68,7 +83,19 @@ function storeUserReport(data) {
     const reports = result.userReports || [];
     reports.unshift(report);
     chrome.storage.local.set({ userReports: reports }, () => {
-      console.log("RedFlag: Report saved locally");
+      if (chrome.runtime.lastError) {
+        console.error(
+          "RedFlag: Error storing user report:",
+          chrome.runtime.lastError
+        );
+        sendResponse({
+          success: false,
+          error: chrome.runtime.lastError.message,
+        });
+      } else {
+        console.log("RedFlag: Report saved locally");
+        sendResponse({ success: true });
+      }
     });
   });
 }
@@ -77,13 +104,24 @@ function storeUserReport(data) {
 function fetchSettings(sendResponse) {
   chrome.storage.local.get(
     ["extensionEnabled", "showWarnings", "analysisMode"],
-    (result) => {
+    (settings) => {
+      if (chrome.runtime.lastError) {
+        console.error(
+          "RedFlag: Error fetching settings:",
+          chrome.runtime.lastError
+        );
+        sendResponse({
+          success: false,
+          error: chrome.runtime.lastError.message,
+        });
+        return;
+      }
       sendResponse({
         success: true,
         settings: {
-          extensionEnabled: result.extensionEnabled !== false,
-          showWarnings: result.showWarnings !== false,
-          analysisMode: result.analysisMode || "conservative",
+          extensionEnabled: settings.extensionEnabled !== false, // Default to true
+          showWarnings: settings.showWarnings !== false, // Default to true
+          analysisMode: settings.analysisMode || "conservative", // Default to conservative
         },
       });
     }
@@ -109,6 +147,18 @@ function persistSettings(settings, sendResponse) {
 // Retrieve recent user reports (up to 10)
 function fetchReports(sendResponse) {
   chrome.storage.local.get(["userReports"], (result) => {
+    if (chrome.runtime.lastError) {
+      console.error(
+        "RedFlag: Error fetching reports:",
+        chrome.runtime.lastError
+      );
+      sendResponse({
+        success: false,
+        error: chrome.runtime.lastError.message,
+        reports: [],
+      });
+      return;
+    }
     const reports = result.userReports || [];
     sendResponse({ success: true, reports: reports.slice(0, 10) });
   });
@@ -123,15 +173,33 @@ function generateReportId() {
 chrome.runtime.onInstalled.addListener((details) => {
   console.log("RedFlag: Extension installed/updated:", details);
   if (details.reason === "install") {
-    chrome.storage.local.set({
-      extensionEnabled: true,
-      showWarnings: true,
-      analysisMode: "conservative",
-    });
+    chrome.storage.local.set(
+      {
+        extensionEnabled: true,
+        showWarnings: true,
+        analysisMode: "conservative",
+        recentAnalyses: [],
+        userReports: [],
+      },
+      () => {
+        if (chrome.runtime.lastError) {
+          console.error(
+            "RedFlag: Error setting default values on install:",
+            chrome.runtime.lastError
+          );
+        } else {
+          console.log("RedFlag: Default settings initialized.");
+        }
+      }
+    );
   }
 });
 
 // Log storage changes (for debugging)
 chrome.storage.onChanged.addListener((changes, namespace) => {
-  console.log("RedFlag: Storage changed:", changes, "in", namespace);
+  if (namespace === "local") {
+    for (let [key, { oldValue, newValue }] of Object.entries(changes)) {
+      console.log(`RedFlag: Storage key "${key}" changed.`);
+    }
+  }
 });
