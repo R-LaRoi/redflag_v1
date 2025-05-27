@@ -27,6 +27,14 @@ RedFlag injects a content script into supported job board pages. This script:
 
 All processing happens locally in your browser, ensuring your activity and job search data remain private.
 
+## Screenshots
+
+![App Screenshot](https://github.com/user-attachments/assets/6b6ecb2a-b39f-45e3-bdf6-312cae9fa457)
+
+![App Screenshot](https://github.com/user-attachments/assets/3e4688d4-9c7b-4924-918a-a3c564cf90b9)
+
+![App Screenshot](https://github.com/user-attachments/assets/927d1085-5d17-4caa-a736-546a847fb6eb)
+
 ## Supported Websites
 
 RedFlag currently supports heuristic analysis on the following job boards:
