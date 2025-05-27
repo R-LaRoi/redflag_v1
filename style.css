@@ -1,46 +1,44 @@
-/* RedFlag Extension Styles - Scoped and Safe */
-
-/* Ensure the root class is on the main popup container in HTML if not already */
 :root {
-  --primary-color-hue: 7; /* Approx hue for rfman.png red/orange */
+  --primary-color-hue: 7;
   --primary-color-saturation: 75%;
-  --primary-color-lightness: 50%; /* #E54D42 */
-  --primary-color: hsl(var(--primary-color-hue), var(--primary-color-saturation), var(--primary-color-lightness));
-  --primary-hover: hsl(var(--primary-color-hue), var(--primary-color-saturation), calc(var(--primary-color-lightness) - 5%));
-
+  --primary-color-lightness: 50%;
+  --primary-color: hsl(
+    var(--primary-color-hue),
+    var(--primary-color-saturation),
+    var(--primary-color-lightness)
+  );
+  --primary-hover: hsl(
+    var(--primary-color-hue),
+    var(--primary-color-saturation),
+    calc(var(--primary-color-lightness) - 5%)
+  );
   --success-color-hsl: 120 60% 45%;
-  --warning-color-hsl: 35 85% 55%; /* Orange/Yellow for warning */
-  --error-color-hsl: 0 70% 50%; /* A distinct red for errors */
-  --info-color-hsl: 210 70% 55%; /* A calm blue for info */
-
-  --background: #10182F; /* Dark blue, similar to rfman's cap */
-  --surface: #FFFFFF; /* White surface for cards */
-  --surface-alt: #F8F9FA; /* Slightly off-white for subtle differentiation */
-  --surface-hover: #F1F3F5;
-
-  --header-bg: var(--background); /* Header uses main background */
-
-  --text-primary: #212529; /* Dark gray for text on light surfaces */
-  --text-secondary: #5A6872; /* Lighter gray for secondary text */
-  --text-muted: #868E96;
-  --text-on-dark: #FFFFFF; /* White text on dark backgrounds */
-  --text-placeholder: #ADB5BD;
-
-  --border: #DEE2E6; /* Light gray border */
-  --border-hover: #CED4DA;
-  --border-strong: #ADB5BD;
-
+  --warning-color-hsl: 35 85% 55%;
+  --error-color-hsl: 0 70% 50%;
+  --info-color-hsl: 210 70% 55%;
+  --background: #10182f;
+  --surface: #ffffff;
+  --surface-alt: #f8f9fa;
+  --surface-hover: #f1f3f5;
+  --header-bg: var(--background);
+  --text-primary: #212529;
+  --text-secondary: #5a6872;
+  --text-muted: #868e96;
+  --text-on-dark: #ffffff;
+  --text-placeholder: #adb5bd;
+  --border: #dee2e6;
+  --border-hover: #ced4da;
+  --border-strong: #adb5bd;
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.07);
   --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.1);
-
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 12px;
-
   --transition: all 0.25s ease-in-out;
-
-  --font-family-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+  --font-family-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
 }
 
 .jobscan-extension-root,
@@ -50,61 +48,57 @@
   padding: 0;
 }
 
-/* Apply to body or a specific wrapper if needed, here targeting .jobscan-extension-root from HTML */
-.jobscan-extension-root {
+.jobscan-extension-root.popup-container {
   font-family: var(--font-family-sans);
   font-size: 14px;
   line-height: 1.6;
   color: var(--text-primary);
   background: var(--background);
-  width: 380px; /* Fixed width for extension popup */
+  width: 380px;
   min-height: 500px;
   overflow-x: hidden;
-  display: flex; /* For footer to stick at bottom if popup-container is the root */
-  flex-direction: column; /* For footer to stick at bottom */
-}
-
-/* Popup Container */
-.jobscan-extension-root .popup-container {
   display: flex;
   flex-direction: column;
-  min-height: 500px; /* Ensure it fills the extension window */
-  flex-grow: 1; /* Allow it to grow and push footer down */
 }
 
-/* Header */
-.jobscan-extension-root .popup-header {
+.jobscan-extension-root.popup-container .popup-container-inner {
+  display: flex;
+  flex-direction: column;
+  min-height: 500px;
+  flex-grow: 1;
+}
+
+.jobscan-extension-root.popup-container .popup-header {
   background: var(--header-bg);
   padding: 12px 16px;
-  border-bottom: 1px solid hsl(var(--primary-color-hue), 20%, 25%); /* Darker border matching theme */
+  border-bottom: 1px solid hsl(var(--primary-color-hue), 20%, 25%);
 }
 
-.jobscan-extension-root .header-content {
+.jobscan-extension-root.popup-container .header-content {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.jobscan-extension-root .logo {
+.jobscan-extension-root.popup-container .logo {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.jobscan-extension-root .logo-icon-img {
-  height: 36px; /* Adjust size as needed */
+.jobscan-extension-root.popup-container .logo-icon-img {
+  height: 36px;
   width: auto;
   vertical-align: middle;
 }
-.jobscan-extension-root .logo-main-text {
+.jobscan-extension-root.popup-container .logo-main-text {
   font-size: 20px;
   font-weight: 600;
   color: var(--text-on-dark);
   letter-spacing: -0.5px;
 }
 
-
-.jobscan-extension-root .version {
+.jobscan-extension-root.popup-container .version {
   font-size: 11px;
   color: var(--text-on-dark);
   background: rgba(255, 255, 255, 0.15);
@@ -113,87 +107,95 @@
   font-weight: 500;
 }
 
-/* Status Section */
-.jobscan-extension-root .status-section {
+.jobscan-extension-root.popup-container .status-section {
   padding: 16px;
 }
 
-.jobscan-extension-root .status-card {
+.jobscan-extension-root.popup-container .status-card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 16px;
   box-shadow: var(--shadow-sm);
   transition: var(--transition);
-  border-left-width: 4px; /* Accent border */
+  border-left-width: 4px;
 }
 
-.jobscan-extension-root .status-card.status-success {
+.jobscan-extension-root.popup-container .status-card.status-success {
   border-left-color: hsl(var(--success-color-hsl));
 }
-.jobscan-extension-root .status-card.status-warning {
+.jobscan-extension-root.popup-container .status-card.status-warning {
   border-left-color: hsl(var(--warning-color-hsl));
 }
-.jobscan-extension-root .status-card.status-error {
+.jobscan-extension-root.popup-container .status-card.status-error {
   border-left-color: hsl(var(--error-color-hsl));
 }
-.jobscan-extension-root .status-card.status-info,
-.jobscan-extension-root .status-card.status-loading { /* Group info and loading */
+.jobscan-extension-root.popup-container .status-card.status-info,
+.jobscan-extension-root.popup-container .status-card.status-loading {
   border-left-color: hsl(var(--info-color-hsl));
 }
 
-
-.jobscan-extension-root .status-content {
+.jobscan-extension-root.popup-container .status-content {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.jobscan-extension-root .status-icon {
+.jobscan-extension-root.popup-container .status-icon {
   font-size: 22px;
   flex-shrink: 0;
 }
 
-.jobscan-extension-root .status-card.status-success .status-icon { color: hsl(var(--success-color-hsl)); }
-.jobscan-extension-root .status-card.status-warning .status-icon { color: hsl(var(--warning-color-hsl)); }
-.jobscan-extension-root .status-card.status-error .status-icon { color: hsl(var(--error-color-hsl)); }
-.jobscan-extension-root .status-card.status-info .status-icon,
-.jobscan-extension-root .status-card.status-loading .status-icon { color: hsl(var(--info-color-hsl)); }
+.jobscan-extension-root.popup-container
+  .status-card.status-success
+  .status-icon {
+  color: hsl(var(--success-color-hsl));
+}
+.jobscan-extension-root.popup-container
+  .status-card.status-warning
+  .status-icon {
+  color: hsl(var(--warning-color-hsl));
+}
+.jobscan-extension-root.popup-container .status-card.status-error .status-icon {
+  color: hsl(var(--error-color-hsl));
+}
+.jobscan-extension-root.popup-container .status-card.status-info .status-icon,
+.jobscan-extension-root.popup-container
+  .status-card.status-loading
+  .status-icon {
+  color: hsl(var(--info-color-hsl));
+}
 
-
-.jobscan-extension-root .status-text {
+.jobscan-extension-root.popup-container .status-text {
   flex: 1;
 }
 
-.jobscan-extension-root .status-title {
+.jobscan-extension-root.popup-container .status-title {
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 2px;
   font-size: 15px;
 }
 
-.jobscan-extension-root .status-subtitle {
+.jobscan-extension-root.popup-container .status-subtitle {
   font-size: 12px;
   color: var(--text-secondary);
 }
 
-/* Controls Section */
-.jobscan-extension-root .controls-section {
+.jobscan-extension-root.popup-container .controls-section {
   padding: 0 16px 16px;
-  background-color: var(--surface-alt); /* Subtle background for controls */
+  background-color: var(--surface-alt);
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
 }
 
-.jobscan-extension-root .control-group {
+.jobscan-extension-root.popup-container .control-group {
   margin-top: 16px;
 }
-.jobscan-extension-root .control-group:first-child {
-  margin-top: 16px; /* Spacing for the first item if section has padding */
+.jobscan-extension-root.popup-container .control-group:first-child {
+  margin-top: 16px;
 }
-
-
-.jobscan-extension-root .control-label {
+.jobscan-extension-root.popup-container .control-label {
   display: block;
   font-weight: 500;
   color: var(--text-primary);
@@ -201,7 +203,7 @@
   font-size: 13px;
 }
 
-.jobscan-extension-root .control-select {
+.jobscan-extension-root.popup-container .control-select {
   width: 100%;
   padding: 10px 12px;
   border: 1px solid var(--border);
@@ -210,64 +212,67 @@
   color: var(--text-primary);
   font-size: 14px;
   transition: var(--transition);
-  appearance: none; /* For custom arrow */
+  appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%235A6872'%3E%3Cpath fill-rule='evenodd' d='M4.22 6.03a.75.75 0 0 1 1.06 0L8 8.75l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.09a.75.75 0 0 1 0-1.06Z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 10px center;
   background-size: 16px;
 }
 
-.jobscan-extension-root .control-select:hover {
+.jobscan-extension-root.popup-container .control-select:hover {
   border-color: var(--border-hover);
 }
 
-.jobscan-extension-root .control-select:focus {
+.jobscan-extension-root.popup-container .control-select:focus {
   outline: none;
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 2px hsl(var(--primary-color-hue) var(--primary-color-saturation) var(--primary-color-lightness) / 0.2);
+  box-shadow: 0 0 0 2px
+    hsl(
+      var(--primary-color-hue) var(--primary-color-saturation)
+        var(--primary-color-lightness) / 0.2
+    );
 }
 
-/* Toggle Switch */
-.jobscan-extension-root .toggle-container {
+.jobscan-extension-root.popup-container .toggle-container {
   display: flex;
   align-items: center;
   justify-content: space-between;
   cursor: pointer;
   user-select: none;
-  padding: 8px 0; /* Add some padding for easier clicking */
+  padding: 8px 0;
 }
 
-.jobscan-extension-root .toggle-label {
+.jobscan-extension-root.popup-container .toggle-label {
   font-weight: 500;
   color: var(--text-primary);
   font-size: 14px;
 }
 
-.jobscan-extension-root .toggle-switch {
+.jobscan-extension-root.popup-container .toggle-switch {
   position: relative;
-  width: 48px; /* Slightly larger */
+  width: 48px;
   height: 26px;
 }
 
-.jobscan-extension-root .toggle-switch input {
+.jobscan-extension-root.popup-container .toggle-switch input {
   opacity: 0;
   width: 0;
   height: 0;
 }
 
-.jobscan-extension-root .toggle-slider {
+.jobscan-extension-root.popup-container .toggle-slider {
   position: absolute;
   cursor: pointer;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: var(--border); /* Default off state */
+  background-color: var(--border);
   border-radius: 26px;
   transition: var(--transition);
 }
 
-.jobscan-extension-root .toggle-slider:before {
+.jobscan-extension-root.popup-container .toggle-slider:before {
   position: absolute;
   content: "";
   height: 20px;
@@ -277,27 +282,29 @@
   background-color: var(--surface);
   border-radius: 50%;
   transition: var(--transition);
-  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-.jobscan-extension-root input:checked + .toggle-slider {
+.jobscan-extension-root.popup-container input:checked + .toggle-slider {
   background-color: var(--primary-color);
 }
 
-.jobscan-extension-root input:checked + .toggle-slider:before {
+.jobscan-extension-root.popup-container input:checked + .toggle-slider:before {
   transform: translateX(22px);
 }
-.jobscan-extension-root input:focus-visible + .toggle-slider {
-  box-shadow: 0 0 0 2px hsl(var(--primary-color-hue) var(--primary-color-saturation) var(--primary-color-lightness) / 0.3);
+.jobscan-extension-root.popup-container input:focus-visible + .toggle-slider {
+  box-shadow: 0 0 0 2px
+    hsl(
+      var(--primary-color-hue) var(--primary-color-saturation)
+        var(--primary-color-lightness) / 0.3
+    );
 }
 
-
-/* Actions Section */
-.jobscan-extension-root .actions-section {
+.jobscan-extension-root.popup-container .actions-section {
   padding: 16px;
 }
 
-.jobscan-extension-root .action-button {
+.jobscan-extension-root.popup-container .action-button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -307,62 +314,68 @@
   border: 1px solid transparent;
   border-radius: var(--radius-md);
   font-size: 14px;
-  font-weight: 600; /* Bolder buttons */
+  font-weight: 600;
   cursor: pointer;
   transition: var(--transition);
   margin-bottom: 10px;
   letter-spacing: 0.5px;
 }
 
-.jobscan-extension-root .action-button:last-child {
+.jobscan-extension-root.popup-container .action-button:last-child {
   margin-bottom: 0;
 }
 
-.jobscan-extension-root .action-button.primary {
+.jobscan-extension-root.popup-container .action-button.primary {
   background-color: var(--primary-color);
   color: var(--text-on-dark);
   border-color: var(--primary-color);
 }
 
-.jobscan-extension-root .action-button.primary:hover:not(:disabled) {
+.jobscan-extension-root.popup-container
+  .action-button.primary:hover:not(:disabled) {
   background-color: var(--primary-hover);
   border-color: var(--primary-hover);
   box-shadow: var(--shadow-sm);
 }
 
-.jobscan-extension-root .action-button.secondary {
+.jobscan-extension-root.popup-container .action-button.secondary {
   background-color: var(--surface);
-  color: var(--primary-color); /* Use primary color for text for consistency */
+  color: var(--primary-color);
   border: 1px solid var(--primary-color);
 }
 
-.jobscan-extension-root .action-button.secondary:hover:not(:disabled) {
-  background-color: hsl(var(--primary-color-hue) var(--primary-color-saturation) 95%); /* Very light primary tint */
+.jobscan-extension-root.popup-container
+  .action-button.secondary:hover:not(:disabled) {
+  background-color: hsl(
+    var(--primary-color-hue) var(--primary-color-saturation) 95%
+  );
   border-color: var(--primary-hover);
   color: var(--primary-hover);
 }
 
-.jobscan-extension-root .action-button:disabled {
+.jobscan-extension-root.popup-container .action-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
-.jobscan-extension-root .action-button:focus-visible {
+.jobscan-extension-root.popup-container .action-button:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px hsl(var(--primary-color-hue) var(--primary-color-saturation) var(--primary-color-lightness) / 0.3);
+  box-shadow: 0 0 0 3px
+    hsl(
+      var(--primary-color-hue) var(--primary-color-saturation)
+        var(--primary-color-lightness) / 0.3
+    );
 }
 
-
-.jobscan-extension-root .button-icon {
+.jobscan-extension-root.popup-container .button-icon {
   font-size: 16px;
 }
 
-/* Job Info & Reports Section */
-.jobscan-extension-root .job-info-section,
-.jobscan-extension-root .reports-section {
+.jobscan-extension-root.popup-container .job-info-section,
+.jobscan-extension-root.popup-container .reports-section {
   padding: 0 16px 16px;
 }
 
-.jobscan-extension-root .section-header {
+.jobscan-extension-root.popup-container .section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -371,20 +384,20 @@
   border-bottom: 1px solid var(--border);
 }
 
-.jobscan-extension-root .section-header h3 {
+.jobscan-extension-root.popup-container .section-header h3 {
   font-size: 15px;
   font-weight: 600;
   color: var(--text-primary);
 }
 
-.jobscan-extension-root .job-details {
+.jobscan-extension-root.popup-container .job-details {
   background: var(--surface-alt);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 12px 16px;
 }
 
-.jobscan-extension-root .job-title {
+.jobscan-extension-root.popup-container .job-title {
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 4px;
@@ -392,13 +405,13 @@
   word-break: break-word;
 }
 
-.jobscan-extension-root .job-company {
+.jobscan-extension-root.popup-container .job-company {
   color: var(--text-secondary);
   font-size: 13px;
   margin-bottom: 8px;
 }
 
-.jobscan-extension-root .job-url {
+.jobscan-extension-root.popup-container .job-url {
   font-size: 11px;
   color: var(--text-muted);
   word-break: break-all;
@@ -411,8 +424,7 @@
   border-radius: var(--radius-sm);
 }
 
-/* Reports Section */
-.jobscan-extension-root .report-count {
+.jobscan-extension-root.popup-container .report-count {
   background: var(--primary-color);
   color: var(--text-on-dark);
   font-size: 11px;
@@ -421,13 +433,13 @@
   font-weight: 600;
 }
 
-.jobscan-extension-root .reports-list {
-  max-height: 150px; /* Adjust as needed */
+.jobscan-extension-root.popup-container .reports-list {
+  max-height: 150px;
   overflow-y: auto;
-  padding-right: 6px; /* For scrollbar */
+  padding-right: 6px;
 }
 
-.jobscan-extension-root .report-item {
+.jobscan-extension-root.popup-container .report-item {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -435,17 +447,15 @@
   margin-bottom: 10px;
   transition: var(--transition);
 }
-.jobscan-extension-root .report-item:hover {
+.jobscan-extension-root.popup-container .report-item:hover {
   border-color: var(--border-strong);
   box-shadow: var(--shadow-sm);
 }
-
-
-.jobscan-extension-root .report-item:last-child {
+.jobscan-extension-root.popup-container .report-item:last-child {
   margin-bottom: 0;
 }
 
-.jobscan-extension-root .report-title {
+.jobscan-extension-root.popup-container .report-title {
   font-size: 13px;
   font-weight: 600;
   color: var(--text-primary);
@@ -453,14 +463,14 @@
   word-break: break-word;
 }
 
-.jobscan-extension-root .report-meta {
+.jobscan-extension-root.popup-container .report-meta {
   display: flex;
   align-items: center;
   gap: 10px;
   font-size: 11px;
 }
 
-.jobscan-extension-root .report-type {
+.jobscan-extension-root.popup-container .report-type {
   background: hsl(var(--info-color-hsl) / 0.1);
   color: hsl(var(--info-color-hsl));
   padding: 3px 7px;
@@ -469,25 +479,24 @@
   text-transform: capitalize;
 }
 
-.jobscan-extension-root .report-date {
+.jobscan-extension-root.popup-container .report-date {
   color: var(--text-muted);
 }
 
-/* Footer */
-.jobscan-extension-root .popup-footer {
+.jobscan-extension-root.popup-container .popup-footer {
   background: var(--surface-alt);
   border-top: 1px solid var(--border);
   padding: 12px 16px;
-  margin-top: auto; /* Stick to bottom */
+  margin-top: auto;
 }
 
-.jobscan-extension-root .footer-links {
+.jobscan-extension-root.popup-container .footer-links {
   display: flex;
   justify-content: center;
   gap: 20px;
 }
 
-.jobscan-extension-root .footer-link {
+.jobscan-extension-root.popup-container .footer-link {
   color: var(--text-secondary);
   text-decoration: none;
   font-size: 12px;
@@ -495,50 +504,49 @@
   font-weight: 500;
 }
 
-.jobscan-extension-root .footer-link:hover {
+.jobscan-extension-root.popup-container .footer-link:hover {
   color: var(--primary-color);
   text-decoration: underline;
 }
 
-/* Modal */
-.jobscan-extension-root .modal { /* Ensure .jobscan-extension-root is on modal for vars */
+.jobscan-extension-root.popup-container .modal {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.6); /* Darker overlay */
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2000; /* Higher z-index */
+  z-index: 2000;
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.3s ease, visibility 0s 0.3s linear;
 }
-.jobscan-extension-root .modal[style*="display: flex"] { /* Show modal based on inline style */
-    opacity: 1;
-    visibility: visible;
-    transition: opacity 0.3s ease, visibility 0s 0s linear;
+.jobscan-extension-root.popup-container .modal[style*="display: flex"] {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.3s ease, visibility 0s 0s linear;
 }
 
-
-.jobscan-extension-root .modal-content {
+.jobscan-extension-root.popup-container .modal-content {
   background: var(--surface);
   border-radius: var(--radius-lg);
-  width: 340px; /* Slightly wider modal */
+  width: 340px;
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: var(--shadow-lg);
   transform: scale(0.95);
   transition: transform 0.3s ease;
 }
-.jobscan-extension-root .modal[style*="display: flex"] .modal-content {
-    transform: scale(1);
+.jobscan-extension-root.popup-container
+  .modal[style*="display: flex"]
+  .modal-content {
+  transform: scale(1);
 }
 
-
-.jobscan-extension-root .modal-header {
+.jobscan-extension-root.popup-container .modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -546,197 +554,13 @@
   border-bottom: 1px solid var(--border);
 }
 
-.jobscan-extension-root .modal-header h2 {
-  font-size: 18px; /* Larger modal title */
+.jobscan-extension-root.popup-container .modal-header h2 {
+  font-size: 18px;
   font-weight: 600;
   color: var(--text-primary);
 }
 
-.jobscan-extension-root .modal-close {
+.jobscan-extension-root.popup-container .modal-close {
   background: none;
   border: none;
-  font-size: 28px; /* Larger close button */
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: var(--transition);
-  padding: 0;
-  line-height: 1;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.jobscan-extension-root .modal-close:hover {
-  color: var(--text-primary);
-}
-
-.jobscan-extension-root .modal-body {
-  padding: 20px;
-}
-
-/* Form Styles (used in Modal) */
-.jobscan-extension-root .form-group {
-  margin-bottom: 20px;
-}
-
-.jobscan-extension-root .form-group label {
-  display: block;
-  font-weight: 500;
-  color: var(--text-primary);
-  margin-bottom: 8px;
-  font-size: 13px;
-}
-
-.jobscan-extension-root .form-control {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  color: var(--text-primary);
-  font-size: 14px;
-  transition: var(--transition);
-  font-family: inherit;
-}
-.jobscan-extension-root .form-control::placeholder {
-  color: var(--text-placeholder);
-}
-
-.jobscan-extension-root .form-control:hover {
-  border-color: var(--border-hover);
-}
-
-.jobscan-extension-root .form-control:focus {
-  outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 2px hsl(var(--primary-color-hue) var(--primary-color-saturation) var(--primary-color-lightness) / 0.2);
-}
-
-.jobscan-extension-root textarea.form-control {
-  resize: vertical;
-  min-height: 80px;
-}
-
-.jobscan-extension-root .form-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 24px;
-}
-
-.jobscan-extension-root .form-actions .action-button {
-  flex: 1;
-  margin-bottom: 0;
-}
-
-/* Content Script Injected Styles (Status bar on page) */
-/* Ensure these styles are distinct and don't clash with popup styles if .jobscan-extension-root is used on both */
-/* For content script, it's better to have a more specific root class if possible, e.g., .jobscan-cs-root */
-/* Assuming .jobscan-extension-root .jobscan-status is for content script elements only */
-
-.jobscan-extension-root .jobscan-status { /* This will be on the actual webpage */
-  position: relative;
-  margin: 16px; /* Give it some space on the page */
-  padding: 12px 16px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  font-family: var(--font-family-sans);
-  font-size: 14px;
-  line-height: 1.5;
-  box-shadow: var(--shadow-md); /* More prominent shadow on page */
-  z-index: 999999; /* High z-index for on-page elements */
-  color: var(--text-primary);
-  border-left-width: 5px;
-}
-
-.jobscan-extension-root .jobscan-status-analyzing {
-  border-left-color: hsl(var(--info-color-hsl));
-  background-color: hsl(var(--info-color-hsl) / 0.05);
-}
-.jobscan-extension-root .jobscan-status-success {
-  border-left-color: hsl(var(--success-color-hsl));
-  background-color: hsl(var(--success-color-hsl) / 0.05);
-}
-.jobscan-extension-root .jobscan-status-warning, /* Group warning and caution */
-.jobscan-extension-root .jobscan-status-caution {
-  border-left-color: hsl(var(--warning-color-hsl));
-  background-color: hsl(var(--warning-color-hsl) / 0.05);
-}
-.jobscan-extension-root .jobscan-status-error {
-  border-left-color: hsl(var(--error-color-hsl));
-  background-color: hsl(var(--error-color-hsl) / 0.05);
-}
-
-.jobscan-extension-root .jobscan-status-content {
-  display: flex;
-  align-items: flex-start; /* Align icon with first line of text */
-  gap: 12px;
-}
-
-.jobscan-extension-root .jobscan-icon { /* Icon in the on-page status */
-  font-size: 18px;
-  flex-shrink: 0;
-  margin-top: 1px; /* Fine-tune alignment */
-}
-.jobscan-extension-root .jobscan-status-analyzing .jobscan-icon { color: hsl(var(--info-color-hsl));}
-.jobscan-extension-root .jobscan-status-success .jobscan-icon { color: hsl(var(--success-color-hsl));}
-.jobscan-extension-root .jobscan-status-warning .jobscan-icon,
-.jobscan-extension-root .jobscan-status-caution .jobscan-icon { color: hsl(var(--warning-color-hsl));}
-.jobscan-extension-root .jobscan-status-error .jobscan-icon { color: hsl(var(--error-color-hsl));}
-
-
-.jobscan-extension-root .jobscan-message {
-  flex: 1;
-  font-weight: 500;
-  white-space: pre-line; /* Preserve newlines in message */
-}
-
-/* Scrollbar Styling */
-.jobscan-extension-root .reports-list::-webkit-scrollbar,
-.jobscan-extension-root .modal-content::-webkit-scrollbar {
-  width: 8px;
-}
-
-.jobscan-extension-root .reports-list::-webkit-scrollbar-track,
-.jobscan-extension-root .modal-content::-webkit-scrollbar-track {
-  background: var(--surface-alt);
-  border-radius: var(--radius-sm);
-}
-
-.jobscan-extension-root .reports-list::-webkit-scrollbar-thumb,
-.jobscan-extension-root .modal-content::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: var(--radius-sm);
-}
-
-.jobscan-extension-root .reports-list::-webkit-scrollbar-thumb:hover,
-.jobscan-extension-root .modal-content::-webkit-scrollbar-thumb:hover {
-  background: var(--border-strong);
-}
-
-/* Animation for loading states */
-@keyframes jobscan-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
-}
-
-.jobscan-extension-root .status-card.status-loading .status-icon {
-  animation: jobscan-pulse 1.5s ease-in-out infinite;
-}
-
-/* Focus styles for accessibility */
-.jobscan-extension-root .action-button:focus-visible,
-.jobscan-extension-root .control-select:focus-visible,
-.jobscan-extension-root .form-control:focus-visible,
-.jobscan-extension-root .modal-close:focus-visible,
-.jobscan-extension-root .footer-link:focus-visible {
-  outline: 2px solid var(--primary-color);
-  outline-offset: 2px;
-  box-shadow: none; /* Remove other focus shadows if outline is used */
-}
-.jobscan-extension-root .toggle-switch input:focus-visible + .toggle-slider {
-  outline: 2px solid var(--primary-color);
-  outline-offset: 2px;
 }
