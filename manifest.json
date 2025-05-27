@@ -40,12 +40,16 @@
     "default_popup": "popup.html",
     "default_title": "RedFlag - Scam Job Detector",
     "default_icon": {
-      "16": "icon16.svg",
-      "32": "icon32.svg"
+      "16": "rfman.png",
+      "32": "rfman.png",
+      "48": "rfman.png",
+      "128": "rfman.png"
     }
   },
   "icons": {
-    "16": "icon16.svg",
-    "32": "icon32.svg"
+    "16": "rfman.png",
+    "32": "rfman.png",
+    "48": "rfman.png",
+    "128": "rfman.png"
   }
 }
