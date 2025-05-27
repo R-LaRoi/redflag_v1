@@ -27,7 +27,6 @@ const elements = {
   reportComment: document.getElementById("report-comment"),
   modalClose: document.getElementById("modal-close"),
   cancelReport: document.getElementById("cancel-report"),
-  // Footer links are now direct hrefs or removed
 };
 
 // Global state
@@ -54,58 +53,40 @@ async function initializePopup() {
   const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
   currentTab = tabs[0];
 
-  if (!currentTab) {
-    showError("Unable to access current tab");
+  if (!currentTab || !currentTab.url) {
+    // Added !currentTab.url check
+    showError("Unable to access current tab information");
+    disableJobActions();
     return;
   }
+
+  // Load settings first, as they might influence UI
+  await loadSettings();
 
   // Check if we're on a supported job site
   const isLinkedIn = currentTab.url.includes("linkedin.com");
   const isIndeed = currentTab.url.includes("indeed.com");
 
-  if (!isLinkedIn && !isIndeed) {
+  if (isLinkedIn || isIndeed) {
+    await loadCurrentJobData(); // Always try to load job data if on a supported domain
+  } else {
     showStatus("Navigate to LinkedIn or Indeed to use RedFlag", "info");
     disableJobActions();
-    return;
   }
 
-  // Load settings
-  await loadSettings();
-
-  // Get current job data if on job page
-  const isJobPage =
-    (isLinkedIn && currentTab.url.includes("/jobs/")) ||
-    (isIndeed && currentTab.url.includes("/viewjob"));
-
-  if (isJobPage) {
-    await loadCurrentJobData();
-  } else {
-    const siteName = isLinkedIn ? "LinkedIn" : "Indeed";
-    showStatus(`Navigate to a ${siteName} job listing`, "info");
-    disableJobActions();
-  }
-
-  // Load recent reports
   await loadRecentReports();
 }
 
 // Setup event listeners
 function setupEventListeners() {
-  // Settings toggles
   elements.enableToggle.addEventListener("change", handleEnableToggle);
   elements.warningsToggle.addEventListener("change", handleWarningsToggle);
   elements.analysisMode.addEventListener("change", handleAnalysisModeChange);
-
-  // Action buttons
   elements.reportJobBtn.addEventListener("click", handleReportJob);
   elements.reanalyzeBtn.addEventListener("click", handleReanalyze);
-
-  // Modal controls
   elements.modalClose.addEventListener("click", closeReportModal);
   elements.cancelReport.addEventListener("click", closeReportModal);
   elements.reportForm.addEventListener("submit", handleReportSubmit);
-
-  // Close modal when clicking outside
   elements.reportModal.addEventListener("click", (e) => {
     if (e.target === elements.reportModal) {
       closeReportModal();
@@ -117,15 +98,23 @@ function setupEventListeners() {
 async function loadSettings() {
   try {
     const response = await sendMessageToBackground({ type: "GET_SETTINGS" });
-    if (response.success) {
+    if (response.success && response.settings) {
       settings = response.settings;
-
-      // Update UI with current settings
       elements.enableToggle.checked = settings.extensionEnabled;
       elements.warningsToggle.checked = settings.showWarnings;
       elements.analysisMode.value = settings.analysisMode;
-
       console.log("RedFlag: Settings loaded:", settings);
+    } else {
+      console.error(
+        "RedFlag: Failed to load settings from background",
+        response.error
+      );
+      // Use default UI values if settings fail to load
+      settings = {
+        extensionEnabled: elements.enableToggle.checked,
+        showWarnings: elements.warningsToggle.checked,
+        analysisMode: elements.analysisMode.value,
+      };
     }
   } catch (error) {
     console.error("RedFlag: Error loading settings:", error);
@@ -136,23 +125,107 @@ async function loadSettings() {
 async function loadCurrentJobData() {
   try {
     showStatus("Loading job information...", "loading");
-
     const response = await sendMessageToTab({ type: "GET_CURRENT_JOB" });
-    if (response && response.success && response.jobData) {
-      currentJobData = response.jobData;
-      updateJobDisplay();
-      enableJobActions();
-      showStatus("Job loaded successfully", "success");
+
+    if (response && response.success) {
+      currentJobData = response.jobData; // This might be null or have empty fields
+
+      if (currentJobData && currentJobData.jobTitle) {
+        updateJobDisplay(response.url); // Pass URL from content script
+        enableJobActions();
+        // Display analysis result from content script
+        if (response.analysisResult) {
+          displayAnalysisStatus(response.analysisResult);
+        } else {
+          showStatus("Job data loaded, awaiting analysis results...", "info");
+        }
+      } else {
+        // Content script did not find a job title, so likely not a specific job page
+        currentJobData = null; // Ensure it's null
+        const siteName = currentTab.url.includes("linkedin.com")
+          ? "LinkedIn"
+          : "Indeed";
+        showStatus(
+          `No job details found on this ${siteName} page. Try a specific job listing.`,
+          "info"
+        );
+        disableJobActions();
+        updateJobDisplay(response.url); // Clear or hide job info section
+      }
     } else {
       currentJobData = null;
-      showStatus("No job data available", "info");
+      showStatus("Failed to retrieve data from this page.", "error");
       disableJobActions();
+      updateJobDisplay();
     }
   } catch (error) {
-    console.error("RedFlag: Error loading job data:", error);
-    showStatus("Failed to load job data", "error");
+    console.error(
+      "RedFlag: Error loading job data from content script:",
+      error
+    );
+    const siteName = currentTab.url.includes("linkedin.com")
+      ? "LinkedIn"
+      : "Indeed";
+    if (
+      error.message &&
+      error.message.includes("Could not establish connection")
+    ) {
+      showStatus(
+        `RedFlag isn't active on this ${siteName} page. Refresh or try a specific job.`,
+        "error"
+      );
+    } else {
+      showStatus("Error loading job data. Try refreshing.", "error");
+    }
     disableJobActions();
+    updateJobDisplay();
   }
+}
+
+// Display analysis status based on analysisResult from content script
+function displayAnalysisStatus(analysisResult) {
+  if (!analysisResult) {
+    showStatus("Analysis data not available.", "info");
+    return;
+  }
+
+  let message = "";
+  let statusType = "info";
+  let subMessage = `Risk Score: ${analysisResult.riskScore}`;
+
+  switch (analysisResult.riskLevel) {
+    case "high":
+      message = "High Risk Suspected";
+      statusType = "error";
+      subMessage += ". Proceed with extreme caution.";
+      break;
+    case "medium":
+      message = "Medium Risk Suspected";
+      statusType = "warning";
+      subMessage += ". Review details carefully.";
+      break;
+    case "low":
+      if (analysisResult.riskScore === 0) {
+        message = "No Significant Red Flags";
+        subMessage = "Looks generally safe, but always do your own research.";
+      } else {
+        message = "Low Risk Detected";
+        subMessage += ". Verify details independently.";
+      }
+      statusType = "success";
+      break;
+    default:
+      message = "Analysis Complete";
+      statusType = "info";
+  }
+
+  if (analysisResult.reasons && analysisResult.reasons.length > 0) {
+    subMessage += `\nFlags: ${analysisResult.reasons.slice(0, 1).join("; ")}${
+      analysisResult.reasons.length > 1 ? "..." : ""
+    }`;
+  }
+
+  showStatus(message, statusType, subMessage);
 }
 
 // Load recent reports
@@ -172,86 +245,104 @@ async function handleEnableToggle() {
   const enabled = elements.enableToggle.checked;
   try {
     await saveSettings({ extensionEnabled: enabled });
-    await sendMessageToTab({
-      type: "TOGGLE_EXTENSION",
-      enabled: enabled,
-    });
+    // Attempt to send message to tab, but handle if it fails (e.g., no content script on page)
+    try {
+      await sendMessageToTab({
+        type: "TOGGLE_EXTENSION",
+        enabled: enabled,
+      });
+    } catch (tabError) {
+      console.warn(
+        "RedFlag: Could not message tab to toggle extension (maybe not on a job page):",
+        tabError.message
+      );
+    }
+
     if (enabled) {
-      showStatus("RedFlag enabled", "success");
-      if (currentJobData) {
-        enableJobActions();
+      // If enabling, and on a supported page, try to re-load/re-analyze
+      const isLinkedIn = currentTab.url.includes("linkedin.com");
+      const isIndeed = currentTab.url.includes("indeed.com");
+      if (isLinkedIn || isIndeed) {
+        await loadCurrentJobData(); // This will trigger analysis if job data is found
+      } else {
+        showStatus("RedFlag enabled. Navigate to a job page.", "success");
       }
     } else {
       showStatus("RedFlag disabled", "info");
-      disableJobActions();
+      disableJobActions(); // Also clear job info if disabling
+      currentJobData = null;
+      updateJobDisplay();
     }
   } catch (error) {
     const message =
       error && error.message ? error.message : JSON.stringify(error);
     console.error("RedFlag: Error toggling extension:", message, error);
-    showError("Could not toggle extension. Are you on a supported job page?");
+    showError("Could not toggle extension state.");
     elements.enableToggle.checked = !enabled; // Revert on error
   }
 }
 
-// Handle warnings toggle
 async function handleWarningsToggle() {
   const showWarnings = elements.warningsToggle.checked;
-
   try {
     await saveSettings({ showWarnings: showWarnings });
     console.log("RedFlag: Warnings toggle updated:", showWarnings);
+    // Optionally, tell content script to update its display behavior if it relies on this setting directly
   } catch (error) {
     console.error("RedFlag: Error updating warnings setting:", error);
     elements.warningsToggle.checked = !showWarnings; // Revert on error
   }
 }
 
-// Handle analysis mode change
 async function handleAnalysisModeChange() {
   const analysisMode = elements.analysisMode.value;
-
   try {
     await saveSettings({ analysisMode: analysisMode });
     console.log("RedFlag: Analysis mode updated:", analysisMode);
+    // If on a job page, trigger reanalysis with new mode
+    if (currentJobData && currentJobData.jobTitle) {
+      await handleReanalyze();
+    }
   } catch (error) {
     console.error("RedFlag: Error updating analysis mode:", error);
   }
 }
 
-// Handle report job button
 function handleReportJob() {
-  if (!currentJobData) {
+  if (!currentJobData || !currentJobData.jobTitle) {
+    // Check for jobTitle
     showError("No job data available to report");
     return;
   }
-
   openReportModal();
 }
 
-// Handle reanalyze button
 async function handleReanalyze() {
   try {
     showStatus("Reanalyzing job...", "loading");
-
     const response = await sendMessageToTab({ type: "REANALYZE" });
     if (response && response.success) {
-      showStatus("Analysis complete", "success");
-      // Refresh job data
-      setTimeout(() => loadCurrentJobData(), 1000);
+      // Content script will re-send ANALYSIS_RESULT, popup doesn't need to show "complete"
+      // Instead, we'll re-load job data which includes the new analysis.
+      // Add a small delay to allow content script to finish and send its result.
+      setTimeout(async () => {
+        await loadCurrentJobData();
+      }, 1500); // Adjusted delay
     } else {
-      showStatus("Analysis failed", "error");
+      showStatus(
+        "Reanalysis request failed",
+        "error",
+        response?.error || "Content script did not respond."
+      );
     }
   } catch (error) {
     console.error("RedFlag: Error reanalyzing:", error);
-    showStatus("Analysis failed", "error");
+    showStatus("Reanalysis failed", "error", error.message);
   }
 }
 
-// Handle report form submission
 async function handleReportSubmit(e) {
   e.preventDefault();
-
   const reportType = elements.reportType.value;
   const reportComment = elements.reportComment.value;
 
@@ -261,24 +352,17 @@ async function handleReportSubmit(e) {
   }
 
   try {
-    // Submit report
     const reportData = {
-      url: currentTab.url,
-      jobTitle: currentJobData?.jobTitle || "Unknown",
-      company: currentJobData?.company || "Unknown",
+      url: currentTab.url, // Use the active tab's URL
+      jobTitle: currentJobData?.jobTitle || "Unknown Job Title",
+      company: currentJobData?.company || "Unknown Company",
       reportType: reportType,
       userComment: reportComment,
     };
 
-    const response = await sendMessageToBackground({
-      type: "USER_REPORT",
-      data: reportData,
-    });
-
+    await sendMessageToBackground({ type: "USER_REPORT", data: reportData });
     closeReportModal();
     showStatus("Report submitted successfully", "success");
-
-    // Refresh reports list
     setTimeout(() => loadRecentReports(), 500);
   } catch (error) {
     console.error("RedFlag: Error submitting report:", error);
@@ -286,13 +370,11 @@ async function handleReportSubmit(e) {
   }
 }
 
-// Save settings to storage
 async function saveSettings(newSettings) {
   const response = await sendMessageToBackground({
     type: "SAVE_SETTINGS",
     data: newSettings,
   });
-
   if (response.success) {
     settings = { ...settings, ...newSettings };
   } else {
@@ -300,48 +382,46 @@ async function saveSettings(newSettings) {
   }
 }
 
-// Update job display
-function updateJobDisplay() {
-  if (currentJobData) {
-    elements.currentJobTitle.textContent = currentJobData.jobTitle || "Unknown";
+// Update job display in the popup
+function updateJobDisplay(urlFromContentScript) {
+  const displayUrl = urlFromContentScript || currentTab?.url || "N/A";
+  if (currentJobData && currentJobData.jobTitle) {
+    elements.currentJobTitle.textContent = currentJobData.jobTitle;
     elements.currentJobCompany.textContent =
-      currentJobData.company || "Unknown";
-    elements.currentJobUrl.textContent = currentTab.url;
-    elements.currentJobUrl.title = currentTab.url;
-
+      currentJobData.company || "Company N/A";
+    elements.currentJobUrl.textContent = displayUrl;
+    elements.currentJobUrl.title = displayUrl;
     elements.jobInfoSection.style.display = "block";
   } else {
     elements.jobInfoSection.style.display = "none";
+    elements.currentJobTitle.textContent = "-";
+    elements.currentJobCompany.textContent = "-";
+    elements.currentJobUrl.textContent = "-";
   }
 }
 
-// Update reports display
 function updateReportsDisplay(reports) {
   elements.reportCount.textContent = reports.length;
-
   if (reports.length > 0) {
     elements.reportsList.innerHTML = reports
       .map(
         (report) => `
       <div class="report-item">
-        <div class="report-title">${report.jobTitle}</div>
+        <div class="report-title">${escapeHtml(report.jobTitle)}</div>
         <div class="report-meta">
-          <span class="report-type">${report.reportType}</span>
+          <span class="report-type">${escapeHtml(report.reportType)}</span>
           <span class="report-date">${formatDate(report.timestamp)}</span>
         </div>
-      </div>
-    `
+      </div>`
       )
       .join("");
-
     elements.reportsSection.style.display = "block";
   } else {
     elements.reportsSection.style.display = "none";
   }
 }
 
-// Show status message
-function showStatus(message, type = "info") {
+function showStatus(message, type = "info", subtitle = "") {
   const icons = {
     loading: "⏳",
     success: "✅",
@@ -349,58 +429,52 @@ function showStatus(message, type = "info") {
     warning: "⚠️",
     info: "ℹ️",
   };
-
   elements.statusIcon.textContent = icons[type] || icons.info;
   elements.statusTitle.textContent = message;
-  elements.statusSubtitle.textContent = getStatusSubtitle(type);
-
-  // Update card styling
+  elements.statusSubtitle.textContent =
+    subtitle || getStatusSubtitleDefault(type);
   elements.statusCard.className = `status-card status-${type}`;
 }
 
-// Show error message
-function showError(message) {
-  showStatus(message, "error");
+function showError(message, subtitle = "") {
+  showStatus(
+    message,
+    "error",
+    subtitle || "Please check console for more details."
+  );
 }
 
-// Get status subtitle
-function getStatusSubtitle(type) {
+function getStatusSubtitleDefault(type) {
   const subtitles = {
     loading: "Please wait...",
-    success: "Ready to scan",
-    error: "Check console for details",
-    warning: "Proceed with caution",
-    info: "No action required",
+    success: "Analysis complete.",
+    error: "An error occurred.",
+    warning: "Proceed with caution.",
+    info: "No action required.",
   };
-
   return subtitles[type] || "";
 }
 
-// Enable job-related actions
 function enableJobActions() {
   elements.reportJobBtn.disabled = false;
   elements.reanalyzeBtn.disabled = false;
 }
 
-// Disable job-related actions
 function disableJobActions() {
   elements.reportJobBtn.disabled = true;
   elements.reanalyzeBtn.disabled = true;
 }
 
-// Open report modal
 function openReportModal() {
   elements.reportModal.style.display = "flex";
   elements.reportType.value = "";
   elements.reportComment.value = "";
 }
 
-// Close report modal
 function closeReportModal() {
   elements.reportModal.style.display = "none";
 }
 
-// Send message to background script
 function sendMessageToBackground(message) {
   return new Promise((resolve, reject) => {
     chrome.runtime.sendMessage(message, (response) => {
@@ -413,14 +487,13 @@ function sendMessageToBackground(message) {
   });
 }
 
-// Send message to content script in current tab
 function sendMessageToTab(message) {
   return new Promise((resolve, reject) => {
-    if (!currentTab) {
-      reject(new Error("No current tab"));
+    if (!currentTab || !currentTab.id) {
+      // Added !currentTab.id check
+      reject(new Error("No valid current tab to send message to."));
       return;
     }
-
     chrome.tabs.sendMessage(currentTab.id, message, (response) => {
       if (chrome.runtime.lastError) {
         reject(chrome.runtime.lastError);
@@ -431,12 +504,26 @@ function sendMessageToTab(message) {
   });
 }
 
-// Format date for display
 function formatDate(timestamp) {
-  const date = new Date(timestamp);
-  return (
-    date.toLocaleDateString() +
-    " " +
-    date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-  );
+  if (!timestamp) return "N/A";
+  try {
+    const date = new Date(timestamp);
+    return (
+      date.toLocaleDateString() +
+      " " +
+      date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    );
+  } catch (e) {
+    return "Invalid Date";
+  }
+}
+
+function escapeHtml(unsafe) {
+  if (typeof unsafe !== "string") return "";
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
