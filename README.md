@@ -127,13 +127,10 @@ Contributions are welcome! If you have ideas for improvements, new features, or 
 
 Please ensure your code follows the existing style and that any new features are well-documented.
 
-## License
-
-This project is licensed under the **Apache-2.0 License**. See the (soon to be added) `LICENSE` file for details.
 
 ## 📞 Contact / Feedback
 
 Encounter a bug? Have a suggestion?
 
-- **Open an Issue**: If you've found a bug or have a feature request, please [open an issue on GitHub](https://github.com/R-LaRoi/redflag_v1/edit/main/README.md))
+- **Open an Issue**: If you've found a bug or have a feature request, please [open an issue on GitHub](https://github.com/R-LaRoi/redflag_v1/issues)
 - **Feedback**: We appreciate your feedback to make RedFlag better!
