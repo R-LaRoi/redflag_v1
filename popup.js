@@ -27,9 +27,7 @@ const elements = {
   reportComment: document.getElementById("report-comment"),
   modalClose: document.getElementById("modal-close"),
   cancelReport: document.getElementById("cancel-report"),
-  helpLink: document.getElementById("help-link"),
-  privacyLink: document.getElementById("privacy-link"),
-  feedbackLink: document.getElementById("feedback-link"),
+  // Footer links are now direct hrefs or removed
 };
 
 // Global state
@@ -106,11 +104,6 @@ function setupEventListeners() {
   elements.modalClose.addEventListener("click", closeReportModal);
   elements.cancelReport.addEventListener("click", closeReportModal);
   elements.reportForm.addEventListener("submit", handleReportSubmit);
-
-  // Footer links
-  elements.helpLink.addEventListener("click", () => openHelpPage());
-  elements.privacyLink.addEventListener("click", () => openPrivacyPage());
-  elements.feedbackLink.addEventListener("click", () => openFeedbackPage());
 
   // Close modal when clicking outside
   elements.reportModal.addEventListener("click", (e) => {
@@ -405,27 +398,6 @@ function openReportModal() {
 // Close report modal
 function closeReportModal() {
   elements.reportModal.style.display = "none";
-}
-
-// Open help page
-function openHelpPage() {
-  chrome.tabs.create({
-    url: "https://github.com/jobscan-extension/help",
-  });
-}
-
-// Open privacy page
-function openPrivacyPage() {
-  chrome.tabs.create({
-    url: "https://github.com/jobscan-extension/privacy",
-  });
-}
-
-// Open feedback page
-function openFeedbackPage() {
-  chrome.tabs.create({
-    url: "https://github.com/jobscan-extension/feedback",
-  });
 }
 
 // Send message to background script
